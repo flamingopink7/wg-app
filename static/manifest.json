@@ -1,14 +1,14 @@
 {
-  "name": "WG App",
+  "name": "WG",
   "short_name": "WG",
-  "start_url": "/?user=",
+  "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
   "icons": [
     {
-      "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+      "src": "https://img.icons8.com/color/512/mountain.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
