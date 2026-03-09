@@ -180,12 +180,15 @@ st.markdown("""
     .stAppDeployButton, [data-testid="stManageAppBadge"], #MainMenu { display: none !important; visibility: hidden !important; }
 </style>
 
-<link rel="manifest" href="app/static/manifest.json">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#ffffff">
-
+<link rel="manifest" href="./static/manifest.json">
 <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            // Punkt vor dem Pfad ist wichtig für die Cloud!
+            navigator.serviceWorker.register('./static/sw.js');
+        });
+    }
+</script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() { navigator.serviceWorker.register('app/static/sw.js'); });
     }
