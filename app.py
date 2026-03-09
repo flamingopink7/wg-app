@@ -154,14 +154,14 @@ st.markdown(f"""
     
     .block-container {{ 
         height: 100vh; overflow-y: auto;
-        padding-left: 70px !important; padding-right: 15px !important;
+        padding-left: 90px !important; padding-right: 15px !important;
         padding-top: 1.5rem !important; padding-bottom: 80px !important;
     }}
 
     /* SCHMALE ICON-SEITENLEISTE */
     [data-testid="stRadio"] {{
         position: fixed !important; top: 0 !important; left: 0 !important;
-        width: 60px !important; height: 100vh !important;
+        width: 80px !important; height: 100vh !important;
         background-color: var(--secondary-background-color) !important;
         z-index: 999999 !important; padding-top: 30px !important;
         border-right: 1px solid #ddd; display: flex; flex-direction: column; align-items: center;
@@ -171,32 +171,28 @@ st.markdown(f"""
     [data-baseweb="radio"] > div:first-child {{ display: none !important; }}
     [data-testid="stRadio"] p {{ display: none !important; }} 
     
-    /* HIER DEINE BILDER AUS DEM STATIC-ORDNER EINSETZEN */
-    /* Ersetze 'bild1.png', 'bild2.png' etc. durch deine echten Dateinamen */
-    
     [data-testid="stRadio"] label:nth-of-type(1) {{
         background-image: url('app/static/001.png');
-        background-size: 30px; background-repeat: no-repeat; background-position: center;
+        background-size: 45px; background-repeat: no-repeat; background-position: center;
     }}
     [data-testid="stRadio"] label:nth-of-type(2) {{
         background-image: url('app/static/002.png');
-        background-size: 30px; background-repeat: no-repeat; background-position: center;
+        background-size: 45px; background-repeat: no-repeat; background-position: center;
     }}
     [data-testid="stRadio"] label:nth-of-type(3) {{
         background-image: url('app/static/icon.png');
-        background-size: 30px; background-repeat: no-repeat; background-position: center;
+        background-size: 45px; background-repeat: no-repeat; background-position: center;
+    }}
+    /* Das Admin-Icon (4. Element) */
+    [data-testid="stRadio"] label:nth-of-type(4) {{
+        background-image: url('app/static/003.png');
+        background-size: 45px; background-repeat: no-repeat; background-position: center;
     }}
     /* Das Logout-Icon (letztes Element) */
     [data-testid="stRadio"] label:last-of-type {{
         background-image: url('app/static/004.png');
-        background-size: 30px; background-repeat: no-repeat; background-position: center;
+        background-size: 45px; background-repeat: no-repeat; background-position: center;
         margin-top: auto; margin-bottom: 30px;
-    }}
-
-    /* Vergrößerungseffekt beim gewählten Icon */
-    [data-testid="stRadio"] label[data-checked="true"] {{
-        background-size: 40px;
-        filter: brightness(0.8);
     }}
 
     /* Stealth Mode */
@@ -287,7 +283,7 @@ if st.session_state.authenticated:
     <style>
         .block-container { 
             height: 100vh; overflow-y: auto;
-            padding-left: 70px !important;  /* WICHTIG: Platz für schmale Sidebar! */
+            padding-left: 90px !important;  /* WICHTIG: Platz für schmale Sidebar! */
             padding-right: 15px !important; padding-top: 1.5rem !important; padding-bottom: 80px !important;
             -webkit-overflow-scrolling: touch;
         }
@@ -295,7 +291,7 @@ if st.session_state.authenticated:
         /* Die statische, schmale Icon-Leiste am linken Rand */
         [data-testid="stRadio"] {
             position: fixed !important; top: 0 !important; left: 0 !important;
-            width: 60px !important; height: 100vh !important;
+            width: 80px !important; height: 100vh !important;
             background-color: var(--secondary-background-color) !important;
             z-index: 999999 !important; padding-top: 30px !important;
             border-right: 1px solid #ddd; display: flex; flex-direction: column; align-items: center;
@@ -304,8 +300,10 @@ if st.session_state.authenticated:
         
         /* Das Layout der einzelnen Radio-Optionen (Icons) */
         [data-testid="stRadio"] label {
-            justify-content: center !important; padding: 15px 0 !important; cursor: pointer;
-            margin-bottom: 5px; width: 100%;
+            height: 80px !important; width: 80px !important;
+            padding: 0 !important; margin-bottom: 5px;
+            display: flex; justify-content: center !important; align-items: center !important;
+            cursor: pointer;
         }
         
         /* Die Emojis zentrieren und Basis-Größe festlegen */
@@ -348,9 +346,11 @@ selected_index = icon_keys.index(selected_icon) + 1
 # Injiziert CSS, das NUR das gewählte Icon vergrößert
 st.markdown(f"""
 <style>
-    [data-testid="stRadio"] label:nth-of-type({selected_index}) p {{
-        font-size: 2.6rem !important;  /* Deutlich größer! */
-        transform: scale(1.1);
+    [data-testid="stRadio"] label:nth-of-type({selected_index}) {{
+        background-size: 60px !important;
+        filter: brightness(0.8);
+        transition: transform 0.2s, background-size 0.2s;
+        transform: scale(1.05);
     }}
 </style>
 """, unsafe_allow_html=True)
