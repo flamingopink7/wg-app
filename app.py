@@ -144,65 +144,59 @@ def get_cycle_info(target_date):
 st.set_page_config(page_title="WG", page_icon="🏔️", layout="centered")
 
 # Dieses CSS gilt IMMER (PWA, Buttons, Stealth-Mode gegen das Streamlit-Logo)
-st.markdown("""
+# WICHTIG: Die doppelten Klammern {{ }} sind nötig, da dies ein f-String ist!
+st.markdown(f"""
 <style>
     /* Styling der Aufgaben-Buttons */
-    .stButton > button {
+    .stButton > button {{
         width: 100%; min-height: 65px; font-size: 1.2rem; font-weight: bold;
         border-radius: 12px; border: 2px solid #f0f2f6; background-color: white; color: #31333F;
-        touch-action: manipulation; /* Verhindert Klick-Verzögerung auf Handys */
-    }
-    [data-testid="stStatusWidget"] { visibility: hidden !important; }
+        touch-action: manipulation;
+    }}
+    [data-testid="stStatusWidget"] {{ visibility: hidden !important; }}
     
-    /* Styling für die Verlaufs-Karten */
-    .result-card {
+    .result-card {{
         padding: 12px; border-radius: 12px; background-color: #f8f9fb;
         border-left: 5px solid #ff4b4b; margin-bottom: 10px; color: #31333F;
-    }
-    .win-card { border-left-color: #29b045; }
+    }}
+    .win-card {{ border-left-color: #29b045; }}
 
-    /* UI Fixierung Full-Height NO BOUNCE (Damit die App starr bleibt) */
-    html, body, [data-testid="stAppViewContainer"] {
+    html, body, [data-testid="stAppViewContainer"] {{
         height: 100vh; width: 100vw; margin: 0; padding: 0;
         overflow: hidden !important; position: fixed; overscroll-behavior-y: none;
-    }
+    }}
 
-    /* --- STEALTH MODE --- (Versteckt Streamlit Logos und Menüs) */
-    [data-testid="collapsedControl"] { display: none !important; }
-    [data-testid="stSidebar"] { display: none !important; }
-    [data-testid="stHeader"], header { display: none !important; }
-    [data-testid="stToolbar"] { display: none !important; }
-    [data-testid="stDecoration"] { display: none !important; }
-    [data-testid="stFooter"], footer { display: none !important; }
+    [data-testid="collapsedControl"] {{ display: none !important; }}
+    [data-testid="stSidebar"] {{ display: none !important; }}
+    [data-testid="stHeader"], header {{ display: none !important; }}
+    [data-testid="stToolbar"] {{ display: none !important; }}
+    [data-testid="stDecoration"] {{ display: none !important; }}
+    [data-testid="stFooter"], footer {{ display: none !important; }}
     
-    /* RADIKALE MASSNAHME gegen mobile Logos & Badges unten rechts */
-    iframe[title*="streamlit"], iframe[src*="manage"] { display: none !important; pointer-events: none !important; opacity: 0 !important; }
-    .stAppDeployButton, [data-testid="stManageAppBadge"], #MainMenu { display: none !important; visibility: hidden !important; }
+    iframe[title*="streamlit"], iframe[src*="manage"] {{ display: none !important; pointer-events: none !important; opacity: 0 !important; }}
+    .stAppDeployButton, [data-testid="stManageAppBadge"], #MainMenu {{ display: none !important; visibility: hidden !important; }}
 </style>
 
 <link rel="manifest" href="./static/manifest.json">
 <script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-            // Punkt vor dem Pfad ist wichtig für die Cloud!
+    if ('serviceWorker' in navigator) {{
+        window.addEventListener('load', function() {{
             navigator.serviceWorker.register('./static/sw.js');
-        });
-    }
-</script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() { navigator.serviceWorker.register('app/static/sw.js'); });
-    }
+        }});
+    }}
+
     const urlParams = new URLSearchParams(window.location.search);
     const urlUser = urlParams.get('user');
-    if (urlUser) {
+    if (urlUser) {{
         localStorage.setItem('wg_user', urlUser);
-    } else {
+    }} else {{
         const savedUser = localStorage.getItem('wg_user');
-        if (savedUser && window.location.pathname === "/") { window.location.replace('/?user=' + savedUser); }
-    }
+        if (savedUser && window.location.pathname === "/") {{ 
+            window.location.replace('/?user=' + savedUser); 
+        }}
+    }}
 </script>
 """, unsafe_allow_html=True)
-
 # ==========================================
 # 5. INITIALISIERUNG & AUTHENTIFIZIERUNG
 # ==========================================
