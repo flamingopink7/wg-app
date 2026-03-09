@@ -172,29 +172,7 @@ st.markdown(f"""
     [data-baseweb="radio"] > div:first-child {{ display: none !important; }}
     [data-testid="stRadio"] p {{ display: none !important; }} 
     
-    label[data-baseweb="radio"]:nth-of-type(1) {{
-        background-image: url('app/static/001.png');
-        background-size: 35px; background-repeat: no-repeat; background-position: center 45%;
-    }}
-    label[data-baseweb="radio"]:nth-of-type(2) {{
-        background-image: url('app/static/002.png');
-        background-size: 35px; background-repeat: no-repeat; background-position: center 45%;
-    }}
-    label[data-baseweb="radio"]:nth-of-type(3) {{
-        background-image: url('app/static/icon.png');
-        background-size: 35px; background-repeat: no-repeat; background-position: center 45%;
-    }}
-    /* Das Admin-Icon (4. Element) */
-    label[data-baseweb="radio"]:nth-of-type(4) {{
-        background-image: url('app/static/003.png');
-        background-size: 35px; background-repeat: no-repeat; background-position: center 45%;
-    }}
-    /* Das Logout-Icon (letztes Element) */
-    label[data-baseweb="radio"]:last-of-type {{
-        background-image: url('app/static/004.png');
-        background-size: 35px; background-repeat: no-repeat; background-position: center 45%;
-        margin-top: auto; margin-bottom: 30px;
-    }}
+    /* Globale Icon-Definitionen entfernt, werden dynamisch per User-Rolle gesetzt */
 
     /* Stealth Mode */
     [data-testid="collapsedControl"], [data-testid="stSidebar"], 
@@ -301,7 +279,7 @@ if st.session_state.authenticated:
         [data-testid="stWidgetLabel"] {{ display: none !important; }}
         
         /* Das Layout der einzelnen Radio-Optionen (Icons) */
-        label[data-baseweb="radio"] {{
+        [data-testid="stRadio"] label {{
             height: 65px !important; width: 65px !important;
             padding: 0 !important; margin-bottom: 5px;
             display: flex; justify-content: center !important; align-items: center !important;
@@ -341,21 +319,41 @@ icon_keys = list(nav_options.keys())
 selected_icon = st.radio("Menü", icon_keys, label_visibility="collapsed")
 active_tab = nav_options[selected_icon]
 
-# --- DYNAMISCHES CSS FÜR DAS GEWÄHLTE ICON ---
-# Findet heraus, das wievielte Icon gewählt wurde (Index beginnt bei 1 für CSS)
-selected_index = icon_keys.index(selected_icon) + 1
+# --- DYNAMISCHES CSS FÜR DIE ICONS ---
+icon_url_map = {
+    "📊": "app/static/001.png",
+    "➕": "app/static/002.png",
+    "📜": "app/static/icon.png",
+    "⚙️": "app/static/003.png",
+    "🚪": "app/static/004.png"
+}
 
-# Injiziert CSS, das NUR das gewählte Icon vergrößert
-st.markdown(f"""
-<style>
-    label[data-baseweb="radio"]:nth-of-type({selected_index}) {{
+icon_css = ""
+# Wir iterieren nur ueber die Menuepunkte, die dieser User logisch auch sehen darf (z.B. kein Admin Icon fuer non-Admins)
+for i, key in enumerate(icon_keys):
+    icon_css += f"""
+    [data-testid="stRadio"] label:nth-of-type({i+1}) {{
+        background-image: url('{icon_url_map[key]}');
+        background-size: 35px; background-repeat: no-repeat; background-position: center 45%;
+    }}
+    """
+
+# Das selektierte Icon nochmal vergroessert formatieren
+selected_index = icon_keys.index(selected_icon) + 1
+icon_css += f"""
+    [data-testid="stRadio"] label:nth-of-type({selected_index}) {{
         background-size: 45px !important;
         filter: brightness(0.8);
         transition: transform 0.2s, background-size 0.2s;
         transform: scale(1.05);
     }}
-</style>
-""", unsafe_allow_html=True)
+"""
+
+st.markdown(f"<style>{icon_css}</style>", unsafe_allow_html=True)
+
+# Dashboard statisch machen (Scrollen deaktivieren auf dem Stand-Tab)
+if active_tab == "Stand":
+    st.markdown("<style>.block-container { overflow-y: hidden !important; }</style>", unsafe_allow_html=True)
 
 
 # ==========================================
