@@ -74,7 +74,7 @@ def add_points_gs(user, team, task, points):
         "timestamp": ts, "user": user, "team": team, "task": task, "points": int(points)
     })
     st.toast("✅ Erledigt!", icon="🎉")
-    st.balloons()
+    # st.balloons() entfernt
     
     def _write_task():
         # Ensure only one thread writes at a time to prevent data loss
@@ -191,6 +191,31 @@ st.markdown("""
         flex: 1;
         padding: 10px 0;
         color: var(--text-color) !important;
+    }
+
+    /* --- STEALTH MODE: Verstecke Streamlit-Elemente --- */
+    /* 1. Verstecke den oberen Balken und das 3-Punkte-Menü komplett */
+    [data-testid="stHeader"] {
+        display: none !important;
+    }
+    #MainMenu {
+        visibility: hidden !important;
+    }
+    
+    /* 2. Verstecke den Standard-Footer ("Made with Streamlit") */
+    [data-testid="stFooter"] {
+        display: none !important;
+    }
+    footer {
+        visibility: hidden !important;
+    }
+
+    /* 3. Verstecke das schwebende Entwickler-Logo unten rechts */
+    .stAppDeployButton {
+        display: none !important;
+    }
+    [data-testid="stManageAppBadge"] {
+        display: none !important;
     }
 </style>
 <link rel="manifest" href="app/static/manifest.json">
@@ -431,5 +456,3 @@ if st.session_state.is_admin:
                 st.query_params["tab"] = "3"
                 st.toast("✅ Gespeichert!", icon="💾")
                 st.rerun()
-
-
