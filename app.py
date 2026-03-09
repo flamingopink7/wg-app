@@ -134,11 +134,12 @@ def get_cycle_info(target_date):
     return start, end, pkg, cycle_num
 
 # --- APP SETUP ---
-st.set_page_config(page_title="WG App", page_icon="🏆", layout="centered")
+# NEU: Name ist jetzt "WG" und das Icon ein Berg
+st.set_page_config(page_title="WG", page_icon="🏔️", layout="centered")
 
 st.markdown("""
 <style>
-    /* Darken text for web view */
+    /* Generelles Button-Styling */
     .stButton > button {
         width: 100%; min-height: 65px; font-size: 1.2rem; font-weight: bold;
         border-radius: 12px; border: 2px solid #f0f2f6; background-color: white; color: #31333F;
@@ -163,58 +164,101 @@ st.markdown("""
         position: fixed;
         overscroll-behavior-y: none;
     }
+    
+    /* Content Bereich nach rechts verschieben, damit die Side-Bar Platz hat */
     .block-container { 
         height: 100vh;
         overflow-y: auto;
+        padding-left: 85px !important;  /* Platz für die neue Sidebar */
+        padding-right: 15px !important;
         padding-top: 1.5rem !important; 
-        padding-bottom: 100px !important;
+        padding-bottom: 80px !important;
         -webkit-overflow-scrolling: touch;
     }
-    
-    /* Fixed Tabs Bottom Navigation */
-    [data-testid="stTabs"] [data-baseweb="tab-list"] {
-        position: fixed;
-        bottom: 0px;
-        left: 0px;
-        width: 100vw;
-        background-color: var(--background-color);
-        z-index: 999999;
-        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-        padding-top: 10px;
-        padding-bottom: env(safe-area-inset-bottom, 20px);
+
+    /* --- NEUE STATISCHE ICON-SEITENLEISTE LINKS --- */
+    /* Wir zwingen die Radio-Buttons in eine vertikale, fixe Leiste am linken Rand */
+    [data-testid="stRadio"] {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 70px !important;
+        height: 100vh !important;
+        background-color: var(--secondary-background-color) !important;
+        z-index: 999999 !important;
+        padding-top: 30px !important;
+        border-right: 1px solid #ddd;
         display: flex;
-        justify-content: space-around;
-        border-top: 1px solid var(--secondary-background-color);
+        flex-direction: column;
+        align-items: center;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.05);
     }
-    [data-testid="stTabs"] [data-baseweb="tab-list"] button {
-        flex: 1;
-        padding: 10px 0;
-        color: var(--text-color) !important;
+    
+    /* Die Radio-Buttons optisch zu großen Icons machen */
+    [data-testid="stRadio"] label {
+        justify-content: center;
+        padding: 15px 0 !important;
+        cursor: pointer;
+        margin-bottom: 5px;
+        width: 100%;
+    }
+    
+    /* Die Icons riesig machen */
+    [data-testid="stRadio"] p {
+        font-size: 2rem !important;
+        margin: 0 !important;
+    }
+
+    /* Den unsichtbaren Klick-Kreis des Radios verstecken */
+    [data-testid="stRadio"] div[role="radio"] {
+        display: none !important;
     }
 
     /* --- STEALTH MODE: Verstecke Streamlit-Elemente --- */
-    /* 1. Verstecke den oberen Balken und Toolbar komplett */
+    /* Das echte Hamburger-Icon und die alte Sidebar töten */
+    [data-testid="collapsedControl"] { display: none !important; }
+    [data-testid="stSidebar"] { display: none !important; }
+    
     [data-testid="stHeader"], header { display: none !important; }
     [data-testid="stToolbar"] { display: none !important; }
     [data-testid="stDecoration"] { display: none !important; }
-    #MainMenu { visibility: hidden !important; }
-    
-    /* 2. Verstecke den Standard-Footer */
     [data-testid="stFooter"], footer { display: none !important; }
 
-    /* 3. RADIKALE MASSNAHME gegen das mobile Cloud-Logo (Iframes blockieren) */
+    /* RADIKALE MASSNAHME gegen mobile Logos & Badges unten rechts */
     iframe[title*="streamlit"], iframe[src*="manage"] {
         display: none !important;
         pointer-events: none !important;
         opacity: 0 !important;
     }
-    .stAppDeployButton, [data-testid="stManageAppBadge"] { display: none !important; }
+    .stAppDeployButton, [data-testid="stManageAppBadge"], #MainMenu {
+        display: none !important;
+        visibility: hidden !important;
+    }
 </style>
-<link rel="manifest" href="app/static/manifest.json">
+
+<link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoiV0ciLCJzaG9ydF9uYW1lIjoiV0ciLCJzdGFydF91cmwiOiIvIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiI2ZmZmZmZiIsInRoZW1lX2NvbG9yIjoiI2ZmZmZmZiIsImljb25zIjpbeyJzcmMiOiJkYXRhOmltYWdlL3N2Zyt4bWwsJTNDc3ZnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zycgdmlld0JveD0nMCAwIDEwMCAxMDAnJTNFJTNDdGV4dCB5PScuOWVtJyBmb250LXNpemU9JzkwJyUzReKbrO+4jyUzQy90ZXh0JTNFJTNDL3N2ZyUzRSIsInNpemVzIjoiMTkyeDE5MiA1MTJ4NTEyIiwidHlwZSI6ImltYWdlL3N2Zyt4bWwiLCJwdXJwb3NlIjoiYW55IG1hc2thYmxlIn1dfQ==">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#ffffff">
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('app/static/sw.js');
+        });
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlUser = urlParams.get('user');
+    if (urlUser) {
+        localStorage.setItem('wg_user', urlUser);
+    } else {
+        const savedUser = localStorage.getItem('wg_user');
+        if (savedUser && window.location.pathname === "/") {
+            window.location.replace('/?user=' + savedUser);
+        }
+    }
+</script>
 """, unsafe_allow_html=True)
 
 # Data Load
@@ -223,9 +267,9 @@ df_users = load_users_gs()
 
 # --- AUTH & AUTO-LOGIN LOGIK ---
 if "user" not in st.session_state:
-    st.session_state.update({"user": None, "authenticated": False, "is_admin": False, "active_tab": "📊 Stand", "deleted_timestamps": set()})
+    st.session_state.update({"user": None, "authenticated": False, "is_admin": False, "deleted_timestamps": set()})
 
-# 1. Prüfen, ob eine URL mitgegeben wurde (Auto-Login nach Redirect)
+# 1. Prüfen, ob eine URL mitgegeben wurde
 if not st.session_state.authenticated:
     qu = st.query_params.get("user")
     if qu:
@@ -235,21 +279,20 @@ if not st.session_state.authenticated:
             st.session_state.update({"user": ui["Name"], "team": ui["Team"], "is_admin": bool(ui["IsAdmin"]), "authenticated": True})
             st.rerun()
 
-# 2. Wenn kein URL-Parameter da ist -> Prüfe LocalStorage (für PWA-Start)
+# 2. LocalStorage Check
 if not st.session_state.authenticated:
     st.markdown("""
     <script>
         const savedUser = localStorage.getItem('wg_user');
-        // Wenn ein User im Handy gespeichert ist, lade die Seite einmalig mit dem URL-Parameter neu
         if (savedUser && !window.location.search.includes('user=')) {
             window.location.search = '?user=' + savedUser;
         }
     </script>
     """, unsafe_allow_html=True)
 
-# 3. Das eigentliche Login-Fenster (falls LocalStorage komplett leer ist)
+# 3. Login Screen
 if not st.session_state.authenticated:
-    st.title("🔐 Login")
+    st.title("🏔️ WG Login")
     username_input = st.text_input("Benutzername")
     pw = st.text_input("Passwort", type="password")
     
@@ -271,7 +314,7 @@ if not st.session_state.authenticated:
             st.warning("Bitte Benutzername und Passwort eingeben")
     st.stop()
 
-# 4. Wenn wir eingeloggt sind, erzwingen wir die Speicherung im Handy!
+# 4. Save to LocalStorage
 if st.session_state.authenticated:
     st.markdown(f"""
     <script>
@@ -279,13 +322,23 @@ if st.session_state.authenticated:
     </script>
     """, unsafe_allow_html=True)
 
-# --- UI HEADER ---
+
+# --- NEUE ICON-NAVIGATION ---
+# Dictionary: Icon -> Logischer Name
+nav_options = {"📊": "Stand", "➕": "Punkte", "📜": "Verlauf"}
+if st.session_state.is_admin:
+    nav_options["🛠"] = "Admin"
+nav_options["🚪"] = "Abmelden"
+
+# Das CSS von oben packt diesen Radio-Button an den linken Bildschirmrand!
+selected_icon = st.radio("Menü", list(nav_options.keys()), label_visibility="collapsed")
+active_tab = nav_options[selected_icon]
+
+
+# --- CONTENT DISPLAY REGION ---
 st.write(f"Hallo **{st.session_state.user}**! 👋")
 
-
-# --- FRAGMENTS FOR SNAPPY UI ---
-@st.fragment(run_every=10)
-def show_dashboard():
+if active_tab == "Stand":
     df = get_active_points() 
     cs, ce, pkg, cn = get_cycle_info(date.today())
     kw_start = cs.isocalendar()[1]
@@ -330,17 +383,8 @@ def show_dashboard():
         </div>
         """, unsafe_allow_html=True)
     else: st.warning("Noch keine Punkte.")
-    
-    if st.button("🚪 Abmelden", key="logout_btn"):
-        # LocalStorage löschen, damit man wirklich ausgeloggt bleibt!
-        st.markdown("<script>localStorage.removeItem('wg_user');</script>", unsafe_allow_html=True)
-        st.session_state.update({"user": None, "authenticated": False})
-        if "user" in st.query_params:
-            del st.query_params["user"]
-        st.rerun()
 
-@st.fragment
-def show_point_entry():
+elif active_tab == "Punkte":
     current_tasks = load_config_gs()
     cat_order = ["Quick", "Wartung", "Main", "Strafaufgaben"]
     
@@ -383,9 +427,7 @@ def show_point_entry():
         else:
             st.info("Noch keine Einträge vorhanden.")
 
-
-@st.fragment(run_every=10)
-def show_history():
+elif active_tab == "Verlauf":
     df = get_active_points()
     if not df.empty:
         df['Datum'] = pd.to_datetime(df['timestamp']).dt.date
@@ -406,49 +448,40 @@ def show_history():
             </div>""", unsafe_allow_html=True)
     else: st.info("Keine Daten.")
 
-# --- TABS ---
-query_tab = st.query_params.get("tab", "0")
-tab_names = ["📊 Stand", "➕ Punkte", "📜 Verlauf"]
-if st.session_state.is_admin: tab_names.append("🛠 Admin")
-
-st.session_state.tab_idx = int(query_tab) if query_tab.isdigit() and int(query_tab) < len(tab_names) else 0
-
-tabs = st.tabs(tab_names)
-
-with tabs[0]: show_dashboard()
-with tabs[1]: show_point_entry()
-with tabs[2]: show_history()
-
-# ADMIN
-if st.session_state.is_admin:
-    with tabs[3]:
-        st.subheader("Aufgaben editieren")
-        cat_order = ["Quick", "Wartung", "Main", "Strafaufgaben"]
+elif active_tab == "Admin" and st.session_state.is_admin:
+    st.subheader("Aufgaben editieren")
+    cat_order = ["Quick", "Wartung", "Main", "Strafaufgaben"]
+    
+    with st.form("adm_task_form"):
+        updated = []
+        new_tasks = []
         
-        with st.form("adm_task_form"):
-            updated = []
-            new_tasks = []
-            
-            for cat in cat_order:
-                with st.expander(f"⚙️ {cat}", expanded=False):
-                    ct = df_tasks[df_tasks["Category"] == cat].copy()
-                    if not ct.empty:
-                        for i, r in ct.iterrows():
-                            col1, col2 = st.columns([3, 1])
-                            pt_val = 0 if pd.isna(r['Points']) else int(r['Points'])
-                            new_p = col1.number_input(r['Task'], value=pt_val, key=f"upd_{i}")
-                            if not col2.checkbox("🗑️ löschen", key=f"del_{i}"):
-                                updated.append({"Category": cat, "Task": r['Task'], "Points": new_p})
-                    
-                    st.markdown(f"**Neue Aufgabe in {cat}:**")
-                    c1, c2 = st.columns([3, 1])
-                    nt = c1.text_input("Name", key=f"new_n_{cat}")
-                    np = c2.number_input("Punkte", 10, key=f"new_p_{cat}")
-                    if nt: new_tasks.append({"Category": cat, "Task": nt, "Points": int(np)})
-            
-            if st.form_submit_button("Speichern"):
-                final = pd.DataFrame(updated + new_tasks)
-                save_tasks_gs(final)
-                st.query_params["tab"] = "3"
-                st.toast("✅ Gespeichert!", icon="💾")
-                st.rerun()
+        for cat in cat_order:
+            with st.expander(f"⚙️ {cat}", expanded=False):
+                ct = df_tasks[df_tasks["Category"] == cat].copy()
+                if not ct.empty:
+                    for i, r in ct.iterrows():
+                        col1, col2 = st.columns([3, 1])
+                        pt_val = 0 if pd.isna(r['Points']) else int(r['Points'])
+                        new_p = col1.number_input(r['Task'], value=pt_val, key=f"upd_{i}")
+                        if not col2.checkbox("🗑️ löschen", key=f"del_{i}"):
+                            updated.append({"Category": cat, "Task": r['Task'], "Points": new_p})
+                
+                st.markdown(f"**Neue Aufgabe in {cat}:**")
+                c1, c2 = st.columns([3, 1])
+                nt = c1.text_input("Name", key=f"new_n_{cat}")
+                np = c2.number_input("Punkte", 10, key=f"new_p_{cat}")
+                if nt: new_tasks.append({"Category": cat, "Task": nt, "Points": int(np)})
+        
+        if st.form_submit_button("Speichern"):
+            final = pd.DataFrame(updated + new_tasks)
+            save_tasks_gs(final)
+            st.toast("✅ Gespeichert!", icon="💾")
+            st.rerun()
+
+elif active_tab == "Abmelden":
+    st.markdown("<script>localStorage.removeItem('wg_user');</script>", unsafe_allow_html=True)
+    st.session_state.update({"user": None, "authenticated": False})
+    if "user" in st.query_params:
+        del st.query_params["user"]
+    st.rerun()
