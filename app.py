@@ -363,4 +363,105 @@ def show_point_entry():
     st.markdown("---")
     with st.expander("⏱️ Letzte Einträge bearbeiten", expanded=False):
         dp = get_active_points()
-        if
+        if not dp.empty:
+            dp['Datum'] = pd.to_datetime(dp['timestamp']).dt.date
+            if st.session_state.is_admin:
+                recent = dp.sort_values("timestamp", ascending=False).head(50)
+            else:
+                today = date.today()
+                recent = dp[(dp['Datum'] == today) & (dp['user'] == st.session_state.user)].sort_values("timestamp", ascending=False)
+                
+            if not recent.empty:
+                for _, r in recent.iterrows():
+                    can_delete = st.session_state.is_admin or (r['user'] == st.session_state.user)
+                    if pd.notna(r['timestamp']):
+                        c1, c2, c3 = st.columns([3, 4, 1])
+                        try:
+                            dt_str = datetime.fromisoformat(r['timestamp']).strftime("%d.%m. %H:%M")
+                        except:
+                            dt_str = str(r['timestamp'])[:10]
+                        
+                        c1.caption(dt_str)
+                        c2.markdown(f"**{r['user']}**: {r['task']} ({r['points']}P)")
+                        if can_delete:
+                            if c3.button("🗑️", key=f"del_pt_{r['timestamp']}"):
+                                delete_points_gs(r['timestamp'])
+            else:
+                st.info("Heute noch keine Einträge gemacht.")
+        else:
+            st.info("Noch keine Einträge vorhanden.")
+
+
+@st.fragment(run_every=10)
+def show_history():
+    df = get_active_points()
+    if not df.empty:
+        df['Datum'] = pd.to_datetime(df['timestamp']).dt.date
+        _, _, _, n = get_cycle_info(date.today())
+        for i in range(n - 1, max(-1, n - 6), -1):
+            s, e, p, _ = get_cycle_info(get_base_date() + timedelta(days=i*14))
+            d = df[(df['Datum'] >= s) & (df['Datum'] <= e)]
+            vs, vl = d[d["team"] == "SaNi"]["points"].sum(), d[d["team"] == "LiSa"]["points"].sum()
+            loser = "SaNi" if vs < vl else ("LiSa" if vl < vs else "Unentschieden")
+            
+            kw_s = s.isocalendar()[1]
+            kw_e = e.isocalendar()[1]
+            
+            card_class = "win-card" if (st.session_state.team != loser or loser == "Unentschieden") else "result-card"
+            st.markdown(f"""<div class="result-card {card_class}">
+                <strong>KW{kw_s} & KW{kw_e}</strong> ({s.strftime('%d.%m')} - {e.strftime('%d.%m')})<br>
+                <small>SaNi: {vs} | LiSa: {vl} | <b>Strafe: {loser}</b><br>{p}</small>
+            </div>""", unsafe_allow_html=True)
+    else: st.info("Keine Daten.")
+
+# --- TABS ---
+# To prevent jumping back after save, check URL for tab index
+query_tab = st.query_params.get("tab", "0")
+tab_names = ["📊 Stand", "➕ Punkte", "📜 Verlauf"]
+if st.session_state.is_admin: tab_names.append("🛠 Admin")
+
+st.session_state.tab_idx = int(query_tab) if query_tab.isdigit() and int(query_tab) < len(tab_names) else 0
+
+# Unfortunately, Streamlit doesn't support setting the open tab programmatically in a simple way 
+# without complex session state injection across the `st.tabs` widget. 
+# A cleaner workaround for Admin forms is to just use a separate page or a sidebar action, 
+# but we will try to just re-render cleanly.
+tabs = st.tabs(tab_names)
+
+with tabs[0]: show_dashboard()
+with tabs[1]: show_point_entry()
+with tabs[2]: show_history()
+
+# ADMIN
+if st.session_state.is_admin:
+    with tabs[3]:
+        st.subheader("Aufgaben editieren")
+        cat_order = ["Quick", "Wartung", "Main", "Strafaufgaben"]
+        
+        with st.form("adm_task_form"):
+            updated = []
+            new_tasks = []
+            
+            for cat in cat_order:
+                with st.expander(f"⚙️ {cat}", expanded=False):
+                    ct = df_tasks[df_tasks["Category"] == cat].copy()
+                    if not ct.empty:
+                        for i, r in ct.iterrows():
+                            col1, col2 = st.columns([3, 1])
+                            pt_val = 0 if pd.isna(r['Points']) else int(r['Points'])
+                            new_p = col1.number_input(r['Task'], value=pt_val, key=f"upd_{i}")
+                            if not col2.checkbox("🗑️ löschen", key=f"del_{i}"):
+                                updated.append({"Category": cat, "Task": r['Task'], "Points": new_p})
+                    
+                    st.markdown(f"**Neue Aufgabe in {cat}:**")
+                    c1, c2 = st.columns([3, 1])
+                    nt = c1.text_input("Name", key=f"new_n_{cat}")
+                    np = c2.number_input("Punkte", 10, key=f"new_p_{cat}")
+                    if nt: new_tasks.append({"Category": cat, "Task": nt, "Points": int(np)})
+            
+            if st.form_submit_button("Speichern"):
+                final = pd.DataFrame(updated + new_tasks)
+                save_tasks_gs(final)
+                st.query_params["tab"] = "3"
+                st.toast("✅ Gespeichert!", icon="💾")
+                st.rerun()
