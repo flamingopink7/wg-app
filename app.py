@@ -202,51 +202,30 @@ st.markdown("""
     /* 2. Verstecke den Standard-Footer */
     [data-testid="stFooter"], footer { display: none !important; }
 
-    /* 3. Radikale Maßnahme gegen mobile Logos & Badges unten rechts */
-    .stAppDeployButton, 
-    [data-testid="stManageAppBadge"], 
-    [data-testid="manage-app-button"],
-    [class^="viewerBadge"] {
+    /* 3. RADIKALE MASSNAHME gegen das mobile Cloud-Logo (Iframes blockieren) */
+    iframe[title*="streamlit"], iframe[src*="manage"] {
         display: none !important;
-        visibility: hidden !important;
+        pointer-events: none !important;
         opacity: 0 !important;
     }
+    .stAppDeployButton, [data-testid="stManageAppBadge"] { display: none !important; }
 </style>
 <link rel="manifest" href="app/static/manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#ffffff">
-<script>
-    // Register Service Worker for PWA compliance
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-            navigator.serviceWorker.register('app/static/sw.js');
-        });
-    }
-
-    // Persist Login Data securely across standalone App launches
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlUser = urlParams.get('user');
-    if (urlUser) {
-        localStorage.setItem('wg_user', urlUser);
-    } else {
-        const savedUser = localStorage.getItem('wg_user');
-        if (savedUser && window.location.pathname === "/") {
-            window.location.replace('/?user=' + savedUser);
-        }
-    }
-</script>
 """, unsafe_allow_html=True)
 
 # Data Load
 df_tasks = load_config_gs()
 df_users = load_users_gs()
 
-# --- AUTH ---
+# --- AUTH & AUTO-LOGIN LOGIK ---
 if "user" not in st.session_state:
     st.session_state.update({"user": None, "authenticated": False, "is_admin": False, "active_tab": "📊 Stand", "deleted_timestamps": set()})
 
+# 1. Prüfen, ob eine URL mitgegeben wurde (Auto-Login nach Redirect)
 if not st.session_state.authenticated:
     qu = st.query_params.get("user")
     if qu:
@@ -256,26 +235,32 @@ if not st.session_state.authenticated:
             st.session_state.update({"user": ui["Name"], "team": ui["Team"], "is_admin": bool(ui["IsAdmin"]), "authenticated": True})
             st.rerun()
 
+# 2. Wenn kein URL-Parameter da ist -> Prüfe LocalStorage (für PWA-Start)
+if not st.session_state.authenticated:
+    st.markdown("""
+    <script>
+        const savedUser = localStorage.getItem('wg_user');
+        // Wenn ein User im Handy gespeichert ist, lade die Seite einmalig mit dem URL-Parameter neu
+        if (savedUser && !window.location.search.includes('user=')) {
+            window.location.search = '?user=' + savedUser;
+        }
+    </script>
+    """, unsafe_allow_html=True)
+
+# 3. Das eigentliche Login-Fenster (falls LocalStorage komplett leer ist)
 if not st.session_state.authenticated:
     st.title("🔐 Login")
-    # NEU: Textfeld anstelle der Selectbox
     username_input = st.text_input("Benutzername")
     pw = st.text_input("Passwort", type="password")
     
     if st.button("Anmelden"):
         if username_input and pw:
-            # Case-insensitive Suche (z.B. "livio" matcht "Livio")
             match = df_users[df_users["Name"].str.lower() == username_input.strip().lower()]
-            
             if not match.empty:
-                # Den exakten Namen aus der Datenbank holen
                 real_username = match.iloc[0]["Name"]
-                
-                # Passwort prüfen
                 if pw == st.secrets["passwords"].get(real_username):
                     ui = match.iloc[0]
                     st.session_state.update({"user": real_username, "team": ui["Team"], "is_admin": bool(ui["IsAdmin"]), "authenticated": True})
-                    # Set URL parameter so the session survives a page reload
                     st.query_params["user"] = real_username
                     st.rerun()
                 else: 
@@ -285,6 +270,14 @@ if not st.session_state.authenticated:
         else:
             st.warning("Bitte Benutzername und Passwort eingeben")
     st.stop()
+
+# 4. Wenn wir eingeloggt sind, erzwingen wir die Speicherung im Handy!
+if st.session_state.authenticated:
+    st.markdown(f"""
+    <script>
+        localStorage.setItem('wg_user', '{st.session_state.user}');
+    </script>
+    """, unsafe_allow_html=True)
 
 # --- UI HEADER ---
 st.write(f"Hallo **{st.session_state.user}**! 👋")
@@ -307,7 +300,6 @@ def show_dashboard():
     if not curr.empty:
         agg = curr.groupby(["team", "user"])["points"].sum().reset_index()
         
-        # Sort so user's team is on the left
         my_team = st.session_state.team
         other_team = "SaNi" if my_team == "LiSa" else "LiSa"
         team_order = [my_team, other_team]
@@ -325,7 +317,6 @@ def show_dashboard():
         my_pts = pl if my_team == "LiSa" else ps
         other_pts = ps if my_team == "LiSa" else pl
 
-        # Use HTML/CSS to force side-by-side display on mobile
         st.markdown(f"""
         <div style="display: flex; justify-content: space-around; text-align: center; margin-top: 5px;">
             <div style="flex: 1;">
@@ -341,6 +332,8 @@ def show_dashboard():
     else: st.warning("Noch keine Punkte.")
     
     if st.button("🚪 Abmelden", key="logout_btn"):
+        # LocalStorage löschen, damit man wirklich ausgeloggt bleibt!
+        st.markdown("<script>localStorage.removeItem('wg_user');</script>", unsafe_allow_html=True)
         st.session_state.update({"user": None, "authenticated": False})
         if "user" in st.query_params:
             del st.query_params["user"]
@@ -348,7 +341,6 @@ def show_dashboard():
 
 @st.fragment
 def show_point_entry():
-    # Load tasks INSIDE the fragment so Admin edits are instantly visible
     current_tasks = load_config_gs()
     cat_order = ["Quick", "Wartung", "Main", "Strafaufgaben"]
     
@@ -415,17 +407,12 @@ def show_history():
     else: st.info("Keine Daten.")
 
 # --- TABS ---
-# To prevent jumping back after save, check URL for tab index
 query_tab = st.query_params.get("tab", "0")
 tab_names = ["📊 Stand", "➕ Punkte", "📜 Verlauf"]
 if st.session_state.is_admin: tab_names.append("🛠 Admin")
 
 st.session_state.tab_idx = int(query_tab) if query_tab.isdigit() and int(query_tab) < len(tab_names) else 0
 
-# Unfortunately, Streamlit doesn't support setting the open tab programmatically in a simple way 
-# without complex session state injection across the `st.tabs` widget. 
-# A cleaner workaround for Admin forms is to just use a separate page or a sidebar action, 
-# but we will try to just re-render cleanly.
 tabs = st.tabs(tab_names)
 
 with tabs[0]: show_dashboard()
