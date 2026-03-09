@@ -139,52 +139,73 @@ def get_cycle_info(target_date):
     return start, end, pkg, cycle_num
 
 # ==========================================
-# 4. APP SETUP & BASIS-CSS (IMMER AKTIV)
+# 4. APP SETUP & BASIS-CSS (BEREINIGT)
 # ==========================================
 st.set_page_config(page_title="WG", page_icon="🏔️", layout="centered")
 
-# Dieses CSS gilt IMMER (PWA, Buttons, Stealth-Mode gegen das Streamlit-Logo)
-# WICHTIG: Die doppelten Klammern {{ }} sind nötig, da dies ein f-String ist!
+# CSS-Block für das Layout und die neuen Bild-Icons
 st.markdown(f"""
 <style>
-    /* Styling der Aufgaben-Buttons */
+    /* Generelles Layout */
     .stButton > button {{
         width: 100%; min-height: 65px; font-size: 1.2rem; font-weight: bold;
         border-radius: 12px; border: 2px solid #f0f2f6; background-color: white; color: #31333F;
-        touch-action: manipulation;
     }}
-    [data-testid="stStatusWidget"] {{ visibility: hidden !important; }}
     
-    .result-card {{
-        padding: 12px; border-radius: 12px; background-color: #f8f9fb;
-        border-left: 5px solid #ff4b4b; margin-bottom: 10px; color: #31333F;
-    }}
-    .win-card {{ border-left-color: #29b045; }}
-
-    html, body, [data-testid="stAppViewContainer"] {{
-        height: 100vh; width: 100vw; margin: 0; padding: 0;
-        overflow: hidden !important; position: fixed; overscroll-behavior-y: none;
+    .block-container {{ 
+        height: 100vh; overflow-y: auto;
+        padding-left: 70px !important; padding-right: 15px !important;
+        padding-top: 1.5rem !important; padding-bottom: 80px !important;
     }}
 
-    [data-testid="collapsedControl"] {{ display: none !important; }}
-    [data-testid="stSidebar"] {{ display: none !important; }}
-    [data-testid="stHeader"], header {{ display: none !important; }}
-    [data-testid="stToolbar"] {{ display: none !important; }}
-    [data-testid="stDecoration"] {{ display: none !important; }}
-    [data-testid="stFooter"], footer {{ display: none !important; }}
+    /* SCHMALE ICON-SEITENLEISTE */
+    [data-testid="stRadio"] {{
+        position: fixed !important; top: 0 !important; left: 0 !important;
+        width: 60px !important; height: 100vh !important;
+        background-color: var(--secondary-background-color) !important;
+        z-index: 999999 !important; padding-top: 30px !important;
+        border-right: 1px solid #ddd; display: flex; flex-direction: column; align-items: center;
+    }}
     
-    iframe[title*="streamlit"], iframe[src*="manage"] {{ display: none !important; pointer-events: none !important; opacity: 0 !important; }}
-    .stAppDeployButton, [data-testid="stManageAppBadge"], #MainMenu {{ display: none !important; visibility: hidden !important; }}
+    /* Punkt und Text verstecken, um Platz für Bilder zu machen */
+    [data-baseweb="radio"] > div:first-child {{ display: none !important; }}
+    [data-testid="stRadio"] p {{ display: none !important; }} 
+    
+    /* HIER DEINE BILDER AUS DEM STATIC-ORDNER EINSETZEN */
+    /* Ersetze 'bild1.png', 'bild2.png' etc. durch deine echten Dateinamen */
+    
+    [data-testid="stRadio"] label:nth-of-type(1) {{
+        background-image: url('./static/001.png');
+        background-size: 30px; background-repeat: no-repeat; background-position: center;
+    }}
+    [data-testid="stRadio"] label:nth-of-type(2) {{
+        background-image: url('./static/002.png');
+        background-size: 30px; background-repeat: no-repeat; background-position: center;
+    }}
+    [data-testid="stRadio"] label:nth-of-type(3) {{
+        background-image: url('./static/icon.png');
+        background-size: 30px; background-repeat: no-repeat; background-position: center;
+    }}
+    /* Das Logout-Icon (letztes Element) */
+    [data-testid="stRadio"] label:last-of-type {{
+        background-image: url('./static/004.png');
+        background-size: 30px; background-repeat: no-repeat; background-position: center;
+        margin-top: auto; margin-bottom: 30px;
+    }}
+
+    /* Vergrößerungseffekt beim gewählten Icon */
+    [data-testid="stRadio"] label[data-checked="true"] {{
+        background-size: 40px;
+        filter: brightness(0.8);
+    }}
+
+    /* Stealth Mode */
+    [data-testid="collapsedControl"], [data-testid="stSidebar"], 
+    header, footer, .stAppDeployButton {{ display: none !important; }}
 </style>
 
-<link rel="manifest" href="./static/manifest.json">
 <script>
-    if ('serviceWorker' in navigator) {{
-        window.addEventListener('load', function() {{
-            navigator.serviceWorker.register('./static/sw.js');
-        }});
-    }}
-
+    /* Nur noch die Auto-Login Logik (PWA-Teil entfernt) */
     const urlParams = new URLSearchParams(window.location.search);
     const urlUser = urlParams.get('user');
     if (urlUser) {{
