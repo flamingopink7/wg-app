@@ -175,20 +175,20 @@ st.markdown(f"""
     /* Ersetze 'bild1.png', 'bild2.png' etc. durch deine echten Dateinamen */
     
     [data-testid="stRadio"] label:nth-of-type(1) {{
-        background-image: url('./static/001.png');
+        background-image: url('app/static/001.png');
         background-size: 30px; background-repeat: no-repeat; background-position: center;
     }}
     [data-testid="stRadio"] label:nth-of-type(2) {{
-        background-image: url('./static/002.png');
+        background-image: url('app/static/002.png');
         background-size: 30px; background-repeat: no-repeat; background-position: center;
     }}
     [data-testid="stRadio"] label:nth-of-type(3) {{
-        background-image: url('./static/icon.png');
+        background-image: url('app/static/icon.png');
         background-size: 30px; background-repeat: no-repeat; background-position: center;
     }}
     /* Das Logout-Icon (letztes Element) */
     [data-testid="stRadio"] label:last-of-type {{
-        background-image: url('./static/004.png');
+        background-image: url('app/static/004.png');
         background-size: 30px; background-repeat: no-repeat; background-position: center;
         margin-top: auto; margin-bottom: 30px;
     }}
