@@ -1,8 +1,8 @@
 const CACHE_NAME = 'wg-app-v1';
 const ASSETS = [
-  '/',
-  '/icon.png',
-  '/manifest.json'
+  './',
+  './static/icon.png',
+  './static/manifest.json'
 ];
 
 self.addEventListener('install', (event) => {
