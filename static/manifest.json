@@ -1,7 +1,8 @@
 {
+  "id": "/?standalone=1",
   "name": "WG",
   "short_name": "WG",
-  "start_url": "/",
+  "start_url": "/?standalone=1",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
@@ -10,7 +11,13 @@
       "src": "icon.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
