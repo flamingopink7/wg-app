@@ -331,7 +331,7 @@ if st.session_state.authenticated:
 # ==========================================
 nav_options = {"📊": "Stand", "➕": "Punkte", "📜": "Verlauf"}
 if st.session_state.is_admin:
-    nav_options["🛠"] = "Admin"
+    nav_options["⚙️"] = "Admin"
 nav_options["🚪"] = "Abmelden"
 
 # Auslesen aller verfügbaren Icons als Liste
@@ -451,11 +451,18 @@ elif active_tab == "Verlauf":
             vs, vl = d[d["team"] == "SaNi"]["points"].sum(), d[d["team"] == "LiSa"]["points"].sum()
             loser = "SaNi" if vs < vl else ("LiSa" if vl < vs else "Unentschieden")
             
-            card_class = "win-card" if (st.session_state.team != loser or loser == "Unentschieden") else "result-card"
-            st.markdown(f"""<div class="result-card {card_class}">
-                <strong>KW{s.isocalendar()[1]} & KW{e.isocalendar()[1]}</strong> ({s.strftime('%d.%m')} - {e.strftime('%d.%m')})<br>
-                <small>SaNi: {vs} | LiSa: {vl} | <b>Strafe: {loser}</b><br>{p}</small>
-            </div>""", unsafe_allow_html=True)
+            kw_s = s.isocalendar()[1]
+            kw_e = e.isocalendar()[1]
+            if st.session_state.team != loser or loser == "Unentschieden":
+                st.success(f"**KW{kw_s} & KW{kw_e}** ({s.strftime('%d.%m')} - {e.strftime('%d.%m')})  \n"
+                           f"SaNi: **{vs}** | LiSa: **{vl}**  \n"
+                           f"Strafe: **{loser}**  \n"
+                           f"{p}")
+            else:
+                st.error(f"**KW{kw_s} & KW{kw_e}** ({s.strftime('%d.%m')} - {e.strftime('%d.%m')})  \n"
+                         f"SaNi: **{vs}** | LiSa: **{vl}**  \n"
+                         f"Strafe: **{loser}**  \n"
+                         f"{p}")
     else: st.info("Keine Daten.")
 
 # TAB 4: ADMIN BEREICH
