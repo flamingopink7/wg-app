@@ -74,7 +74,6 @@ def add_points_gs(user, team, task, points):
         "timestamp": ts, "user": user, "team": team, "task": task, "points": int(points)
     })
     st.toast("✅ Erledigt!", icon="🎉")
-    # st.balloons() entfernt
     
     def _write_task():
         # Ensure only one thread writes at a time to prevent data loss
@@ -194,28 +193,23 @@ st.markdown("""
     }
 
     /* --- STEALTH MODE: Verstecke Streamlit-Elemente --- */
-    /* 1. Verstecke den oberen Balken und das 3-Punkte-Menü komplett */
-    [data-testid="stHeader"] {
-        display: none !important;
-    }
-    #MainMenu {
-        visibility: hidden !important;
-    }
+    /* 1. Verstecke den oberen Balken und Toolbar komplett */
+    [data-testid="stHeader"], header { display: none !important; }
+    [data-testid="stToolbar"] { display: none !important; }
+    [data-testid="stDecoration"] { display: none !important; }
+    #MainMenu { visibility: hidden !important; }
     
-    /* 2. Verstecke den Standard-Footer ("Made with Streamlit") */
-    [data-testid="stFooter"] {
-        display: none !important;
-    }
-    footer {
-        visibility: hidden !important;
-    }
+    /* 2. Verstecke den Standard-Footer */
+    [data-testid="stFooter"], footer { display: none !important; }
 
-    /* 3. Verstecke das schwebende Entwickler-Logo unten rechts */
-    .stAppDeployButton {
+    /* 3. Radikale Maßnahme gegen mobile Logos & Badges unten rechts */
+    .stAppDeployButton, 
+    [data-testid="stManageAppBadge"], 
+    [data-testid="manage-app-button"],
+    [class^="viewerBadge"] {
         display: none !important;
-    }
-    [data-testid="stManageAppBadge"] {
-        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
     }
 </style>
 <link rel="manifest" href="app/static/manifest.json">
@@ -264,17 +258,32 @@ if not st.session_state.authenticated:
 
 if not st.session_state.authenticated:
     st.title("🔐 Login")
-    sel = st.selectbox("Wer bist du?", ["Bitte wählen..."] + df_users["Name"].tolist())
-    if sel != "Bitte wählen...":
-        pw = st.text_input("Passwort", type="password")
-        if st.button("Anmelden"):
-            if pw == st.secrets["passwords"].get(sel):
-                ui = df_users[df_users["Name"] == sel].iloc[0]
-                st.session_state.update({"user": sel, "team": ui["Team"], "is_admin": bool(ui["IsAdmin"]), "authenticated": True})
-                # Set URL parameter so the session survives a page reload
-                st.query_params["user"] = sel
-                st.rerun()
-            else: st.error("Falsches Passwort")
+    # NEU: Textfeld anstelle der Selectbox
+    username_input = st.text_input("Benutzername")
+    pw = st.text_input("Passwort", type="password")
+    
+    if st.button("Anmelden"):
+        if username_input and pw:
+            # Case-insensitive Suche (z.B. "livio" matcht "Livio")
+            match = df_users[df_users["Name"].str.lower() == username_input.strip().lower()]
+            
+            if not match.empty:
+                # Den exakten Namen aus der Datenbank holen
+                real_username = match.iloc[0]["Name"]
+                
+                # Passwort prüfen
+                if pw == st.secrets["passwords"].get(real_username):
+                    ui = match.iloc[0]
+                    st.session_state.update({"user": real_username, "team": ui["Team"], "is_admin": bool(ui["IsAdmin"]), "authenticated": True})
+                    # Set URL parameter so the session survives a page reload
+                    st.query_params["user"] = real_username
+                    st.rerun()
+                else: 
+                    st.error("Falsches Passwort")
+            else:
+                st.error("Benutzername nicht gefunden")
+        else:
+            st.warning("Bitte Benutzername und Passwort eingeben")
     st.stop()
 
 # --- UI HEADER ---
@@ -354,105 +363,4 @@ def show_point_entry():
     st.markdown("---")
     with st.expander("⏱️ Letzte Einträge bearbeiten", expanded=False):
         dp = get_active_points()
-        if not dp.empty:
-            dp['Datum'] = pd.to_datetime(dp['timestamp']).dt.date
-            if st.session_state.is_admin:
-                recent = dp.sort_values("timestamp", ascending=False).head(50)
-            else:
-                today = date.today()
-                recent = dp[(dp['Datum'] == today) & (dp['user'] == st.session_state.user)].sort_values("timestamp", ascending=False)
-                
-            if not recent.empty:
-                for _, r in recent.iterrows():
-                    can_delete = st.session_state.is_admin or (r['user'] == st.session_state.user)
-                    if pd.notna(r['timestamp']):
-                        c1, c2, c3 = st.columns([3, 4, 1])
-                        try:
-                            dt_str = datetime.fromisoformat(r['timestamp']).strftime("%d.%m. %H:%M")
-                        except:
-                            dt_str = str(r['timestamp'])[:10]
-                        
-                        c1.caption(dt_str)
-                        c2.markdown(f"**{r['user']}**: {r['task']} ({r['points']}P)")
-                        if can_delete:
-                            if c3.button("🗑️", key=f"del_pt_{r['timestamp']}"):
-                                delete_points_gs(r['timestamp'])
-            else:
-                st.info("Heute noch keine Einträge gemacht.")
-        else:
-            st.info("Noch keine Einträge vorhanden.")
-
-
-@st.fragment(run_every=10)
-def show_history():
-    df = get_active_points()
-    if not df.empty:
-        df['Datum'] = pd.to_datetime(df['timestamp']).dt.date
-        _, _, _, n = get_cycle_info(date.today())
-        for i in range(n - 1, max(-1, n - 6), -1):
-            s, e, p, _ = get_cycle_info(get_base_date() + timedelta(days=i*14))
-            d = df[(df['Datum'] >= s) & (df['Datum'] <= e)]
-            vs, vl = d[d["team"] == "SaNi"]["points"].sum(), d[d["team"] == "LiSa"]["points"].sum()
-            loser = "SaNi" if vs < vl else ("LiSa" if vl < vs else "Unentschieden")
-            
-            kw_s = s.isocalendar()[1]
-            kw_e = e.isocalendar()[1]
-            
-            card_class = "win-card" if (st.session_state.team != loser or loser == "Unentschieden") else "result-card"
-            st.markdown(f"""<div class="result-card {card_class}">
-                <strong>KW{kw_s} & KW{kw_e}</strong> ({s.strftime('%d.%m')} - {e.strftime('%d.%m')})<br>
-                <small>SaNi: {vs} | LiSa: {vl} | <b>Strafe: {loser}</b><br>{p}</small>
-            </div>""", unsafe_allow_html=True)
-    else: st.info("Keine Daten.")
-
-# --- TABS ---
-# To prevent jumping back after save, check URL for tab index
-query_tab = st.query_params.get("tab", "0")
-tab_names = ["📊 Stand", "➕ Punkte", "📜 Verlauf"]
-if st.session_state.is_admin: tab_names.append("🛠 Admin")
-
-st.session_state.tab_idx = int(query_tab) if query_tab.isdigit() and int(query_tab) < len(tab_names) else 0
-
-# Unfortunately, Streamlit doesn't support setting the open tab programmatically in a simple way 
-# without complex session state injection across the `st.tabs` widget. 
-# A cleaner workaround for Admin forms is to just use a separate page or a sidebar action, 
-# but we will try to just re-render cleanly.
-tabs = st.tabs(tab_names)
-
-with tabs[0]: show_dashboard()
-with tabs[1]: show_point_entry()
-with tabs[2]: show_history()
-
-# ADMIN
-if st.session_state.is_admin:
-    with tabs[3]:
-        st.subheader("Aufgaben editieren")
-        cat_order = ["Quick", "Wartung", "Main", "Strafaufgaben"]
-        
-        with st.form("adm_task_form"):
-            updated = []
-            new_tasks = []
-            
-            for cat in cat_order:
-                with st.expander(f"⚙️ {cat}", expanded=False):
-                    ct = df_tasks[df_tasks["Category"] == cat].copy()
-                    if not ct.empty:
-                        for i, r in ct.iterrows():
-                            col1, col2 = st.columns([3, 1])
-                            pt_val = 0 if pd.isna(r['Points']) else int(r['Points'])
-                            new_p = col1.number_input(r['Task'], value=pt_val, key=f"upd_{i}")
-                            if not col2.checkbox("🗑️ löschen", key=f"del_{i}"):
-                                updated.append({"Category": cat, "Task": r['Task'], "Points": new_p})
-                    
-                    st.markdown(f"**Neue Aufgabe in {cat}:**")
-                    c1, c2 = st.columns([3, 1])
-                    nt = c1.text_input("Name", key=f"new_n_{cat}")
-                    np = c2.number_input("Punkte", 10, key=f"new_p_{cat}")
-                    if nt: new_tasks.append({"Category": cat, "Task": nt, "Points": int(np)})
-            
-            if st.form_submit_button("Speichern"):
-                final = pd.DataFrame(updated + new_tasks)
-                save_tasks_gs(final)
-                st.query_params["tab"] = "3"
-                st.toast("✅ Gespeichert!", icon="💾")
-                st.rerun()
+        if
