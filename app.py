@@ -7,18 +7,13 @@ from datetime import datetime, date, timedelta
 import plotly.express as px
 from streamlit_gsheets import GSheetsConnection
 
-# ==========================================
-# 1. DATENBANK & GOOGLE SHEETS VERBINDUNG
-# ==========================================
+# --- DATENBANK VERBINDUNG ---
 conn = st.connection("gsheets", type=GSheetsConnection)
-gs_write_lock = threading.Lock() # Verhindert Schreibfehler bei gleichzeitigem Zugriff
+gs_write_lock = threading.Lock()
 
-# ==========================================
-# 2. CACHING (DATEN LADEN)
-# ==========================================
+# --- DATEN LADEN ---
 @st.cache_data(ttl=3600)
 def load_config_gs():
-    """Lädt Aufgaben/Punkte-Definitionen (1h Cache)."""
     try:
         dt = conn.read(worksheet="WG_Tasks", ttl=3600)
         return dt
@@ -27,7 +22,6 @@ def load_config_gs():
 
 @st.cache_data(ttl=3600)
 def load_users_gs():
-    """Lädt Benutzer (1h Cache)."""
     try:
         du = conn.read(worksheet="WG_Users", ttl=3600)
         return du
@@ -36,74 +30,68 @@ def load_users_gs():
 
 @st.cache_data(ttl=10)
 def load_points_gs():
-    """Lädt die aktuellen Punktestände (10s Cache)."""
     try:
         dp = conn.read(worksheet="WG_Data", ttl=10)
         return dp
     except:
         return pd.DataFrame(columns=["timestamp", "user", "team", "task", "points"])
 
-# ==========================================
-# 3. APP SETUP & CSS (DEIN DESIGN)
-# ==========================================
-st.set_page_config(page_title="WG App", page_icon="🏔️", layout="centered")
+# --- APP SETUP & URSPRÜNGLICHES DESIGN ---
+st.set_page_config(page_title="WG App", page_icon="🏆", layout="centered")
 
-# Wir nutzen f-Strings für CSS, damit wir Variablen einbauen können.
-# WICHTIG: CSS-Klammern müssen wegen f-String doppelt {{ }} sein!
 st.markdown(f"""
 <style>
-    /* BASIS STYLING */
+    /* URSPRÜNGLICHE BUTTONS */
     .stButton > button {{
         width: 100%; min-height: 65px; font-size: 1.2rem; font-weight: bold;
         border-radius: 12px; border: 2px solid #f0f2f6; background-color: white; color: #31333F;
+        touch-action: manipulation;
     }}
-    
-    /* DAS DESIGN FÜR DEN VERLAUF (Wiederhergestellt) */
+
+    /* URSPRÜNGLICHER VERLAUF (Karten-Design) */
     .result-card {{
-        padding: 15px; border-radius: 12px; background-color: #f8f9fb;
-        border-left: 6px solid #ff4b4b; margin-bottom: 12px; color: #31333F;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        padding: 12px; border-radius: 12px; background-color: #f8f9fb;
+        border-left: 5px solid #ff4b4b; margin-bottom: 10px; color: #31333F;
     }}
-    .win-card {{ border-left-color: #29b045 !important; }}
+    .win-card {{ border-left-color: #29b045; }}
 
-    /* SIDEBAR NAVIGATION (Schmale Icon-Leiste links) */
-    [data-testid="stSidebar"] {{ display: none !important; }} /* Standard-Sidebar weg */
-    
-    [data-testid="stRadio"] {{
-        position: fixed !important; top: 0 !important; left: 0 !important;
-        width: 70px !important; height: 100vh !important;
-        background-color: #ffffff !important; z-index: 999999 !important;
-        border-right: 1px solid #eee; display: flex; flex-direction: column;
-        align-items: center; padding-top: 40px !important;
+    /* FIXIERTES LAYOUT OHNE BOUNCE */
+    html, body, [data-testid="stAppViewContainer"] {{
+        height: 100vh; width: 100vw; margin: 0; padding: 0;
+        overflow: hidden !important; position: fixed; overscroll-behavior-y: none;
     }}
-    
-    /* Icons in der Leiste */
-    [data-testid="stRadio"] label {{
-        justify-content: center !important; padding: 20px 0 !important;
-    }}
-    [data-testid="stRadio"] p {{ font-size: 1.8rem !important; transition: 0.2s; }}
-    [data-baseweb="radio"] > div:first-child {{ display: none !important; }} /* Radio-Punkt verstecken */
-
-    /* PLATZ FÜR INHALT (70px links frei lassen für die Leiste) */
     .block-container {{ 
-        padding-left: 85px !important; padding-right: 20px !important;
-        padding-top: 2rem !important;
+        height: 100vh; overflow-y: auto;
+        padding-top: 1.5rem !important; padding-bottom: 100px !important;
+        -webkit-overflow-scrolling: touch;
+    }}
+    
+    /* BOTTOM TABS (Wieder unten wie gewünscht) */
+    [data-testid="stTabs"] [data-baseweb="tab-list"] {{
+        position: fixed; bottom: 0px; left: 0px; width: 100vw;
+        background-color: white; z-index: 999999;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        padding-top: 10px; padding-bottom: env(safe-area-inset-bottom, 20px);
+        display: flex; justify-content: space-around;
+    }}
+    [data-testid="stTabs"] [data-baseweb="tab-list"] button {{
+        flex: 1; padding: 10px 0; color: #31333F !important;
     }}
 
-    /* STREAMLIT BRANDING VERSTECKEN */
-    header, footer, [data-testid="stHeader"] {{ visibility: hidden !important; height: 0; }}
+    /* STEALTH MODE (Logos weg) */
+    [data-testid="stHeader"], header, footer, .stAppDeployButton, [data-testid="stManageAppBadge"] {{
+        display: none !important; visibility: hidden !important;
+    }}
 </style>
 
-<link rel="manifest" href="./static/manifest.json">
 <script>
-    // Service Worker für die Installation (PWA)
+    // PWA & AUTO-LOGIN
     if ('serviceWorker' in navigator) {{
         window.addEventListener('load', function() {{
             navigator.serviceWorker.register('./static/sw.js');
         }});
     }}
-    
-    // Auto-Login Logik
+
     const urlParams = new URLSearchParams(window.location.search);
     const urlUser = urlParams.get('user');
     if (urlUser) {{
@@ -117,66 +105,69 @@ st.markdown(f"""
 </script>
 """, unsafe_allow_html=True)
 
-# ==========================================
-# 4. NAVIGATIONSLOGIK
-# ==========================================
-# Initialisierung Session State
+# --- AUTHENTIFIZIERUNG ---
+df_users = load_users_gs()
 if "authenticated" not in st.session_state:
     st.session_state.update({"user": None, "authenticated": False, "is_admin": False})
 
-# Login-Check
 if not st.session_state.authenticated:
-    # --- LOGIN PAGE (Zentriert) ---
-    st.markdown("<style>.block-container { max-width: 400px !important; margin: 0 auto !important; padding-left: 20px !important; }</style>", unsafe_allow_html=True)
-    st.title("🏔️ WG Login")
-    u_in = st.text_input("User")
-    p_in = st.text_input("Passwort", type="password")
-    if st.button("Login"):
-        df_u = load_users_gs()
-        match = df_u[df_u["Name"].str.lower() == u_in.lower()]
-        if not match.empty and p_in == st.secrets["passwords"].get(match.iloc[0]["Name"]):
-            st.session_state.update({"user": match.iloc[0]["Name"], "team": match.iloc[0]["Team"], "is_admin": bool(match.iloc[0]["IsAdmin"]), "authenticated": True})
+    # Auto-Login über URL
+    qu = st.query_params.get("user")
+    if qu:
+        match = df_users[df_users["Name"].str.lower() == qu.lower()]
+        if not match.empty:
+            ui = match.iloc[0]
+            st.session_state.update({"user": ui["Name"], "team": ui["Team"], "is_admin": bool(ui["IsAdmin"]), "authenticated": True})
             st.rerun()
+
+    # Manueller Login
+    st.title("🔐 Login")
+    u_name = st.text_input("Benutzername")
+    u_pw = st.text_input("Passwort", type="password")
+    if st.button("Anmelden"):
+        match = df_users[df_users["Name"].str.lower() == u_name.strip().lower()]
+        if not match.empty and u_pw == st.secrets["passwords"].get(match.iloc[0]["Name"]):
+            st.session_state.update({"user": match.iloc[0]["Name"], "team": match.iloc[0]["Team"], "is_admin": bool(match.iloc[0]["IsAdmin"]), "authenticated": True})
+            st.query_params["user"] = match.iloc[0]["Name"]
+            st.rerun()
+        else: st.error("Daten inkorrekt")
     st.stop()
 
-# --- SIDEBAR ICON LOGIK ---
-nav_icons = {"📊": "Stand", "➕": "Punkte", "📜": "Verlauf", "🚪": "Exit"}
-sel_icon = st.radio("Nav", list(nav_icons.keys()), label_visibility="collapsed")
-page = nav_icons[sel_icon]
+# --- HAUPTSEITE (EINGELOGGT) ---
+st.write(f"Hallo **{st.session_state.user}**! 👋")
 
-# Dynamisches Vergrößern des gewählten Icons
-icon_idx = list(nav_icons.keys()).index(sel_icon) + 1
-st.markdown(f"<style>[data-testid='stRadio'] label:nth-of-type({icon_idx}) p {{ font-size: 2.8rem !important; }}</style>", unsafe_allow_html=True)
+# URSPRÜNGLICHE TABS
+tabs = st.tabs(["📊 Stand", "➕ Punkte", "📜 Verlauf"])
 
-# ==========================================
-# 5. SEITEN-INHALTE
-# ==========================================
+with tabs[0]:
+    # Dein Dashboard/Plotly Chart...
+    st.info("Aktueller Stand der WG")
 
-if page == "Stand":
-    st.subheader(f"Hi {st.session_state.user}! 👋")
-    # Hier kommt dein Plotly Chart rein...
-    st.info("Hier ist die Übersicht der aktuellen Woche.")
+with tabs[1]:
+    # Deine Aufgaben-Buttons...
+    df_t = load_config_gs()
+    for cat in ["Quick", "Wartung", "Main"]:
+        with st.expander(cat):
+            tasks = df_t[df_t["Category"] == cat]
+            for index, row in tasks.iterrows():
+                if st.button(f"{row['Task']} ({row['Points']}P)", key=f"btn_{index}"):
+                    # add_points_gs Logik hier...
+                    st.toast(f"{row['Task']} eingetragen!")
 
-elif page == "Verlauf":
-    st.subheader("📜 Dein Verlauf")
-    df = load_points_gs()
-    if not df.empty:
-        # Beispiel für die Karten-Logik (wie du sie mochtest)
-        # Wir simulieren hier die Anzeige der letzten Zyklen
-        for i in range(3): 
-            # card_class wird grün (win-card), wenn dein Team führt
-            card_class = "win-card" if i == 0 else "" 
-            st.markdown(f"""
-                <div class="result-card {card_class}">
-                    <strong>Zyklus {10-i}</strong><br>
-                    <small>Team LiSa: 45 Pkt | Team SaNi: 30 Pkt</small><br>
-                    <span style="font-size: 0.8rem;">Strafe: Paket A (Boden/Bad)</span>
-                </div>
-            """, unsafe_allow_html=True)
-    else:
-        st.write("Noch keine Daten vorhanden.")
+with tabs[2]:
+    # VERLAUF IM ALTEN DESIGN
+    st.markdown("""
+        <div class="result-card win-card">
+            <strong>Letzter Zyklus</strong><br>
+            Team LiSa hat gewonnen!
+        </div>
+        <div class="result-card">
+            <strong>Vorletzter Zyklus</strong><br>
+            Team SaNi hat gewonnen.
+        </div>
+    """, unsafe_allow_html=True)
 
-elif page == "Exit":
+if st.sidebar.button("Logout"):
     st.markdown("<script>localStorage.removeItem('wg_user');</script>", unsafe_allow_html=True)
     st.session_state.authenticated = False
     st.rerun()
