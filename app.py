@@ -184,7 +184,6 @@ st.markdown(f"""
     [data-testid="stRadio"] p { 
         color: transparent !important; 
         font-size: 0px !important;
-        display: none !important;
     } 
     
     /* Widget-Titel komplett verstecken */
@@ -328,7 +327,6 @@ if st.session_state.authenticated:
         [data-testid="stRadio"] p {
             color: transparent !important; 
             font-size: 0px !important; 
-            display: none !important;
         }
 
         /* DEN BÖSEN PUNKT DES RADIO-BUTTONS VERNICHTEN */
