@@ -165,38 +165,40 @@ st.markdown(f"""
         background-color: var(--secondary-background-color) !important;
         z-index: 999999 !important; padding-top: 30px !important;
         border-right: 1px solid #ddd; display: flex; flex-direction: column; align-items: center;
+    /* Das Layout der einzelnen Radio-Optionen (Icons) */
+    [data-baseweb="radio"] {{
+        height: 80px !important; width: 80px !important;
+        padding: 0 !important; margin-bottom: 5px;
+        display: flex; justify-content: center !important; align-items: center !important;
+        cursor: pointer;
+        background-size: 45px !important; 
+        background-repeat: no-repeat !important; 
+        background-position: center !important;
     }}
     
     /* Punkt und Text verstecken, um Platz für Bilder zu machen */
     [data-baseweb="radio"] > div:first-child {{ display: none !important; }}
     [data-testid="stRadio"] p {{ display: none !important; }} 
     
-    /* Das Widget-Label (Titel) zwingend verstecken, stiehlt sonst den CSS Selector */
-    [data-testid="stRadio"] > label[data-testid="stWidgetLabel"] {{
-        display: none !important;
-    }}
+    /* Widget-Titel komplett verstecken */
+    [data-testid="stWidgetLabel"] {{ display: none !important; }}
 
-    [data-testid="stRadio"] label:nth-of-type(1) {{
-        background-image: url('static/001.png');
-        background-size: 45px; background-repeat: no-repeat; background-position: center;
+    [data-baseweb="radio"]:nth-of-type(1) {{
+        background-image: url('static/001.png') !important;
     }}
-    [data-testid="stRadio"] label:nth-of-type(2) {{
-        background-image: url('static/002.png');
-        background-size: 45px; background-repeat: no-repeat; background-position: center;
+    [data-baseweb="radio"]:nth-of-type(2) {{
+        background-image: url('static/002.png') !important;
     }}
-    [data-testid="stRadio"] label:nth-of-type(3) {{
-        background-image: url('static/icon.png');
-        background-size: 45px; background-repeat: no-repeat; background-position: center;
+    [data-baseweb="radio"]:nth-of-type(3) {{
+        background-image: url('static/icon.png') !important;
     }}
     /* Das Admin-Icon */
-    [data-testid="stRadio"] label:nth-of-type(4) {{
-        background-image: url('static/003.png');
-        background-size: 45px; background-repeat: no-repeat; background-position: center;
+    [data-baseweb="radio"]:nth-of-type(4) {{
+        background-image: url('static/003.png') !important;
     }}
-    /* Das Logout-Icon (letztes Element überschreibt Admin-Icon bei normalen Usern) */
-    [data-testid="stRadio"] label:last-of-type {{
-        background-image: url('static/004.png');
-        background-size: 45px; background-repeat: no-repeat; background-position: center;
+    /* Das Logout-Icon */
+    [data-baseweb="radio"]:last-of-type {{
+        background-image: url('static/004.png') !important;
         margin-top: auto; margin-bottom: 30px;
     }}
 
@@ -304,17 +306,15 @@ if st.session_state.authenticated:
         }
         
         /* Das Layout der einzelnen Radio-Optionen (Icons) */
-        [data-testid="stRadio"] label {
+        [data-baseweb="radio"] {
             height: 80px !important; width: 80px !important;
             padding: 0 !important; margin-bottom: 5px;
             display: flex; justify-content: center !important; align-items: center !important;
             cursor: pointer;
         }
         
-        /* Das Widget-Label (Titel) zwingend verstecken */
-        [data-testid="stRadio"] > label[data-testid="stWidgetLabel"] {
-            display: none !important;
-        }
+        /* Widget-Titel komplett verstecken */
+        [data-testid="stWidgetLabel"] { display: none !important; }
         
         /* Die Emojis zentrieren und Basis-Größe festlegen */
         [data-testid="stRadio"] p {
@@ -356,7 +356,7 @@ selected_index = icon_keys.index(selected_icon) + 1
 # Injiziert CSS, das NUR das gewählte Icon vergrößert
 st.markdown(f"""
 <style>
-    [data-testid="stRadio"] label:nth-of-type({selected_index}) {{
+    [data-baseweb="radio"]:nth-of-type({selected_index}) {{
         background-size: 60px !important;
         filter: brightness(0.8);
         transition: transform 0.2s, background-size 0.2s;
