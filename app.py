@@ -163,7 +163,7 @@ st.markdown("""
         position: fixed !important; top: 0 !important; left: 0 !important;
         width: 65px !important; height: 100vh !important;
         background-color: var(--secondary-background-color) !important;
-        z-index: 999999 !important; padding-top: 30px !important;
+        z-index: 999999 !important; padding-top: 20px !important;
         border-right: 1px solid #ddd; display: flex; flex-direction: column; align-items: center;
     }
 
@@ -328,8 +328,8 @@ if st.session_state.authenticated:
             cursor: pointer;
         }
         
-        /* Widget-Titel komplett verstecken */
-        [data-testid="stWidgetLabel"] { display: none !important; }
+        /* Widget-Titel der Navigation komplett verstecken */
+        [data-testid="stRadio"] [data-testid="stWidgetLabel"] { display: none !important; }
         
         /* WICHTIG: Den Text ("Stand", "Punkte" etc.) unsichtbar machen, 
            damit man nur noch die sauberen PNG-Bilder sieht! */
