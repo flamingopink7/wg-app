@@ -496,29 +496,31 @@ elif active_tab == "Admin" and st.session_state.is_admin:
     st.subheader("Aufgaben editieren")
     cat_order = ["Quick", "Wartung", "Main", "Strafaufgaben"]
     
-    with st.form("adm_task_form"):
-        updated, new_tasks = [], []
-        
-        for cat in cat_order:
-            with st.expander(f"⚙️ {cat}", expanded=False):
-                ct = df_tasks[df_tasks["Category"] == cat].copy()
-                if not ct.empty:
-                    for i, r in ct.iterrows():
-                        col1, col2 = st.columns([3, 1])
-                        new_p = col1.number_input(r['Task'], value=0 if pd.isna(r['Points']) else int(r['Points']), key=f"upd_{i}")
-                        if not col2.checkbox("🗑️ löschen", key=f"del_{i}"):
-                            updated.append({"Category": cat, "Task": r['Task'], "Points": new_p})
-                
-                st.markdown(f"**Neue Aufgabe in {cat}:**")
-                c1, c2 = st.columns([3, 1])
-                nt = c1.text_input("Name", key=f"new_n_{cat}")
-                np = c2.number_input("Punkte", 10, key=f"new_p_{cat}")
-                if nt: new_tasks.append({"Category": cat, "Task": nt, "Points": int(np)})
-        
-        if st.form_submit_button("Speichern"):
-            save_tasks_gs(pd.DataFrame(updated + new_tasks))
-            st.toast("✅ Gespeichert!", icon="💾")
-            st.rerun()
+    updated, new_tasks = [], []
+    delete_clicked = False
+    
+    for cat in cat_order:
+        with st.expander(f"⚙️ {cat}", expanded=False):
+            ct = df_tasks[df_tasks["Category"] == cat].copy()
+            if not ct.empty:
+                for i, r in ct.iterrows():
+                    col1, col2 = st.columns([3, 1])
+                    new_p = col1.number_input(r['Task'], value=0 if pd.isna(r['Points']) else int(r['Points']), key=f"upd_{i}")
+                    if col2.button("🗑️ löschen", key=f"del_{i}"):
+                        delete_clicked = True
+                    else:
+                        updated.append({"Category": cat, "Task": r['Task'], "Points": new_p})
+            
+            st.markdown(f"**Neue Aufgabe in {cat}:**")
+            c1, c2 = st.columns([3, 1])
+            nt = c1.text_input("Name", key=f"new_n_{cat}")
+            np = c2.number_input("Punkte", 10, key=f"new_p_{cat}")
+            if nt: new_tasks.append({"Category": cat, "Task": nt, "Points": int(np)})
+    
+    if st.button("Speichern") or delete_clicked:
+        save_tasks_gs(pd.DataFrame(updated + new_tasks))
+        st.toast("✅ Gespeichert!", icon="💾")
+        st.rerun()
 
 # TAB 5: ABMELDEN
 elif active_tab == "Abmelden":
