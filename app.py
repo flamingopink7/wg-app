@@ -352,7 +352,7 @@ if st.session_state.authenticated:
     if st.session_state.is_admin:
         st.markdown("""
         <style>
-            [data-testid="stVerticalBlock"] [data-testid="stColumn"]:last-child button {
+            [data-testid="stVerticalBlock"] [data-testid="stColumn"]:last-child .stButton > button {
                 min-height: 40px !important; height: 40px !important; 
                 font-size: 0.9rem !important; padding: 0 !important; margin-top: 27px !important;
             }
