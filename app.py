@@ -144,77 +144,77 @@ def get_cycle_info(target_date):
 st.set_page_config(page_title="WG", page_icon="🏔️", layout="centered")
 
 # CSS-Block für das Layout und die neuen Bild-Icons
-st.markdown(f"""
+st.markdown("""
 <style>
     /* Generelles Layout */
-    .stButton > button {{
+    .stButton > button {
         width: 100%; min-height: 65px; font-size: 1.2rem; font-weight: bold;
         border-radius: 12px; border: 2px solid #f0f2f6; background-color: white; color: #31333F;
-    }}
+    }
     
-    .block-container {{ 
+    .block-container { 
         height: 100vh; overflow-y: auto;
         padding-left: 90px !important; padding-right: 15px !important;
         padding-top: 1.5rem !important; padding-bottom: 80px !important;
-    }}
+    }
 
     /* SCHMALE ICON-SEITENLEISTE */
-    [data-testid="stRadio"] {{
+    [data-testid="stRadio"] {
         position: fixed !important; top: 0 !important; left: 0 !important;
         width: 80px !important; height: 100vh !important;
         background-color: var(--secondary-background-color) !important;
         z-index: 999999 !important; padding-top: 30px !important;
         border-right: 1px solid #ddd; display: flex; flex-direction: column; align-items: center;
-    }}
+    }
 
     /* Das Layout der einzelnen Radio-Optionen (Icons) */
-    [data-testid="stRadio"] label {{
+    [data-testid="stRadio"] label {
         height: 80px !important; width: 80px !important;
         padding: 0 !important; margin-bottom: 5px;
         display: flex; justify-content: center !important; align-items: center !important;
         cursor: pointer;
-    }}
+    }
     
     /* Punkt und Text verstecken, um Platz für Bilder zu machen */
-    [data-baseweb="radio"] > div:first-child {{ display: none !important; }}
+    [data-baseweb="radio"] > div:first-child { display: none !important; }
     
     /* WICHTIG: Den angezeigten Text ("Stand", "Punkte") komplett unsichtbar machen, 
        damit nur die PNG-Bilder im Hintergrund übrig bleiben! */
-    [data-testid="stRadio"] p {{ 
+    [data-testid="stRadio"] p { 
         color: transparent !important; 
         font-size: 0px !important;
-    }} 
+    } 
     
     /* Widget-Titel komplett verstecken */
-    [data-testid="stWidgetLabel"] {{ display: none !important; }}
+    [data-testid="stWidgetLabel"] { display: none !important; }
 
-    [data-testid="stRadio"] label:nth-of-type(1) {{
+    [data-testid="stRadio"] label:nth-of-type(1) {
         background-image: url('app/static/001.png');
         background-size: 45px; background-repeat: no-repeat; background-position: center;
-    }}
-    [data-testid="stRadio"] label:nth-of-type(2) {{
+    }
+    [data-testid="stRadio"] label:nth-of-type(2) {
         background-image: url('app/static/002.png');
         background-size: 45px; background-repeat: no-repeat; background-position: center;
-    }}
-    [data-testid="stRadio"] label:nth-of-type(3) {{
+    }
+    [data-testid="stRadio"] label:nth-of-type(3) {
         background-image: url('app/static/icon.png');
         background-size: 45px; background-repeat: no-repeat; background-position: center;
-    }}
+    }
     /* Das Admin-Icon */
-    [data-testid="stRadio"] label:nth-of-type(4) {{
+    [data-testid="stRadio"] label:nth-of-type(4) {
         background-image: url('app/static/003.png');
         background-size: 45px; background-repeat: no-repeat; background-position: center;
-    }}
+    }
     /* Das Logout-Icon */
-    [data-testid="stRadio"] label:last-of-type {{
+    [data-testid="stRadio"] label:last-of-type {
         background-image: url('app/static/004.png');
         background-size: 45px; background-repeat: no-repeat; background-position: center;
         margin-top: auto; margin-bottom: 30px;
-    }}
+    }
 
     /* Stealth Mode */
     [data-testid="collapsedControl"], [data-testid="stSidebar"], 
-    header, footer, .stAppDeployButton {{ display: none !important; }}
+    header, footer, .stAppDeployButton { display: none !important; }
 </style>
 
 <script>
