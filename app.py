@@ -25,7 +25,7 @@ gs_write_lock = threading.Lock()
 def load_config_gs():
     """Lädt die Aufgaben (Tasks) und cacht sie für 1 Stunde (3600s)."""
     try:
-        dt = conn.read(worksheet="WG_Tasks", ttl=3600)
+        dt = conn.read(worksheet="WG_Tasks", ttl=0)
         mapping = {c.lower(): c for c in dt.columns}
         for k, v in {"category": "Category", "task": "Task", "points": "Points"}.items():
             if k in mapping: dt = dt.rename(columns={mapping[k]: v})
@@ -37,7 +37,7 @@ def load_config_gs():
 def load_users_gs():
     """Lädt die Benutzerliste und cacht sie für 1 Stunde."""
     try:
-        du = conn.read(worksheet="WG_Users", ttl=3600)
+        du = conn.read(worksheet="WG_Users", ttl=0)
         mapping = {c.lower(): c for c in du.columns}
         for k, v in {"name": "Name", "team": "Team", "isadmin": "IsAdmin"}.items():
             if k in mapping: du = du.rename(columns={mapping[k]: v})
@@ -49,7 +49,7 @@ def load_users_gs():
 def load_points_gs():
     """Lädt die Punkte-Tabelle. Kurzer Cache (10s), damit neue Punkte schnell sichtbar sind."""
     try:
-        dp = conn.read(worksheet="WG_Data", ttl=10)
+        dp = conn.read(worksheet="WG_Data", ttl=0)
         for c in ["timestamp", "user", "team", "task", "points"]:
             if c not in dp.columns: dp[c] = None
         return dp
@@ -123,6 +123,8 @@ def delete_points_gs(timestamp_val):
 
 def save_tasks_gs(df_tasks):
     """Speichert Änderungen aus dem Admin-Bereich an den Aufgaben."""
+    try: conn.clear(worksheet="WG_Tasks")
+    except: pass
     conn.update(worksheet="WG_Tasks", data=df_tasks)
     load_config_gs.clear()
 
@@ -346,6 +348,17 @@ if st.session_state.authenticated:
     </style>
     """, unsafe_allow_html=True)
     
+    # CSS FÜR ADMIN-DELETE-BUTTONS (Global gültig, aber spezifisch formatiert)
+    if st.session_state.is_admin:
+        st.markdown("""
+        <style>
+            [data-testid="stVerticalBlock"] [data-testid="stColumn"]:last-child button {
+                min-height: 40px !important; height: 40px !important; 
+                font-size: 0.9rem !important; padding: 0 !important; margin-top: 27px !important;
+            }
+        </style>
+        """, unsafe_allow_html=True)
+
     # User im LocalStorage speichern (sicher ist sicher)
     st.markdown(f"<script>localStorage.setItem('wg_user', '{st.session_state.user}');</script>", unsafe_allow_html=True)
 
@@ -519,6 +532,9 @@ elif active_tab == "Admin" and st.session_state.is_admin:
     
     if st.button("Speichern") or delete_clicked:
         save_tasks_gs(pd.DataFrame(updated + new_tasks))
+        for cat in cat_order:
+            if f"new_n_{cat}" in st.session_state: del st.session_state[f"new_n_{cat}"]
+            if f"new_p_{cat}" in st.session_state: del st.session_state[f"new_p_{cat}"]
         st.toast("✅ Gespeichert!", icon="💾")
         st.rerun()
 
