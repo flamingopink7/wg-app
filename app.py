@@ -307,10 +307,10 @@ if st.session_state.authenticated:
 # ==========================================
 # 7. DIE ICON-NAVIGATION (SIDEBAR)
 # ==========================================
-nav_options = {"📊": "Stand", "➕": "Punkte", "📜": "Verlauf"}
+nav_options = {"Stand": "Stand", "Punkte": "Punkte", "Verlauf": "Verlauf"}
 if st.session_state.is_admin:
-    nav_options["⚙️"] = "Admin"
-nav_options["🚪"] = "Abmelden"
+    nav_options["Admin"] = "Admin"
+nav_options["Abmelden"] = "Abmelden"
 
 # Auslesen aller verfügbaren Icons als Liste
 icon_keys = list(nav_options.keys())
@@ -321,11 +321,11 @@ active_tab = nav_options[selected_icon]
 
 # --- DYNAMISCHES CSS FÜR DIE ICONS ---
 icon_url_map = {
-    "📊": "app/static/001.png",
-    "➕": "app/static/002.png",
-    "📜": "app/static/icon.png",
-    "⚙️": "app/static/003.png",
-    "🚪": "app/static/004.png"
+    "Stand": "static/001.png",
+    "Punkte": "static/002.png",
+    "Verlauf": "static/icon.png",
+    "Admin": "static/003.png",
+    "Abmelden": "static/004.png"
 }
 
 icon_css = ""
