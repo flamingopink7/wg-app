@@ -178,7 +178,14 @@ st.markdown(f"""
     
     /* Punkt und Text verstecken, um Platz für Bilder zu machen */
     [data-baseweb="radio"] > div:first-child {{ display: none !important; }}
-    [data-testid="stRadio"] p {{ display: none !important; }} 
+    
+    /* WICHTIG: Den angezeigten Text ("Stand", "Punkte") komplett unsichtbar machen, 
+       damit nur die PNG-Bilder im Hintergrund übrig bleiben! */
+    [data-testid="stRadio"] p { 
+        color: transparent !important; 
+        font-size: 0px !important;
+        display: none !important;
+    } 
     
     /* Widget-Titel komplett verstecken */
     [data-testid="stWidgetLabel"] {{ display: none !important; }}
@@ -314,12 +321,14 @@ if st.session_state.authenticated:
         }
         
         /* Widget-Titel komplett verstecken */
-        [data-testid="stWidgetLabel"] { display: none !important; }
+        [data-testid="stWidgetLabel"] { display: none !important;        }
         
-        /* Die Emojis zentrieren und Basis-Größe festlegen */
+        /* WICHTIG: Den Text ("Stand", "Punkte" etc.) unsichtbar machen, 
+           damit man nur noch die sauberen PNG-Bilder sieht! */
         [data-testid="stRadio"] p {
-            font-size: 1.8rem !important; margin: 0 !important; text-align: center;
-            transition: all 0.2s ease-in-out; /* Weicher Übergang beim Vergrößern */
+            color: transparent !important; 
+            font-size: 0px !important; 
+            display: none !important;
         }
 
         /* DEN BÖSEN PUNKT DES RADIO-BUTTONS VERNICHTEN */
