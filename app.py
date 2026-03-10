@@ -337,10 +337,10 @@ if st.session_state.authenticated:
 # ==========================================
 # 7. DIE ICON-NAVIGATION (SIDEBAR)
 # ==========================================
-nav_options = {"📊": "Stand", "➕": "Punkte", "📜": "Verlauf"}
+nav_options = {"Stand": "Stand", "Punkte": "Punkte", "Verlauf": "Verlauf"}
 if st.session_state.is_admin:
-    nav_options["⚙️"] = "Admin"
-nav_options["🚪"] = "Abmelden"
+    nav_options["Admin"] = "Admin"
+nav_options["Abmelden"] = "Abmelden"
 
 # Auslesen aller verfügbaren Icons als Liste
 icon_keys = list(nav_options.keys())
