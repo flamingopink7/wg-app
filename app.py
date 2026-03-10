@@ -509,6 +509,12 @@ elif active_tab == "Admin" and st.session_state.is_admin:
     st.subheader("Aufgaben editieren")
     cat_order = ["Quick", "Wartung", "Main", "Strafaufgaben"]
     
+    if st.session_state.get("clear_admin_inputs", False):
+        for cat in cat_order:
+            if f"new_n_{cat}" in st.session_state: del st.session_state[f"new_n_{cat}"]
+            if f"new_p_{cat}" in st.session_state: del st.session_state[f"new_p_{cat}"]
+        st.session_state.clear_admin_inputs = False
+
     updated, new_tasks = [], []
     delete_clicked = False
     
@@ -533,9 +539,7 @@ elif active_tab == "Admin" and st.session_state.is_admin:
     if st.button("Speichern") or delete_clicked:
         st.toast("Speichere Änderungen...", icon="⏳")
         save_tasks_gs(pd.DataFrame(updated + new_tasks))
-        for cat in cat_order:
-            if f"new_n_{cat}" in st.session_state: st.session_state[f"new_n_{cat}"] = ""
-            if f"new_p_{cat}" in st.session_state: st.session_state[f"new_p_{cat}"] = 10
+        st.session_state.clear_admin_inputs = True
         st.toast("✅ Gespeichert!", icon="💾")
         st.rerun()
 
