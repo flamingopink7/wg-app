@@ -518,7 +518,7 @@ elif active_tab == "Admin" and st.session_state.is_admin:
             if not ct.empty:
                 for i, r in ct.iterrows():
                     col1, col2 = st.columns([3, 1])
-                    new_p = col1.number_input(r['Task'], value=0 if pd.isna(r['Points']) else int(r['Points']), key=f"upd_{i}")
+                    new_p = col1.number_input(r['Task'], value=0 if pd.isna(r['Points']) else int(r['Points']), step=1, key=f"upd_{i}")
                     if col2.button("🗑️ löschen", key=f"del_{i}"):
                         delete_clicked = True
                     else:
@@ -527,14 +527,15 @@ elif active_tab == "Admin" and st.session_state.is_admin:
             st.markdown(f"**Neue Aufgabe in {cat}:**")
             c1, c2 = st.columns([3, 1])
             nt = c1.text_input("Name", key=f"new_n_{cat}")
-            np = c2.number_input("Punkte", 10, key=f"new_p_{cat}")
+            np = c2.number_input("Punkte", value=10, step=1, key=f"new_p_{cat}")
             if nt: new_tasks.append({"Category": cat, "Task": nt, "Points": int(np)})
     
     if st.button("Speichern") or delete_clicked:
+        st.toast("Speichere Änderungen...", icon="⏳")
         save_tasks_gs(pd.DataFrame(updated + new_tasks))
         for cat in cat_order:
-            if f"new_n_{cat}" in st.session_state: del st.session_state[f"new_n_{cat}"]
-            if f"new_p_{cat}" in st.session_state: del st.session_state[f"new_p_{cat}"]
+            if f"new_n_{cat}" in st.session_state: st.session_state[f"new_n_{cat}"] = ""
+            if f"new_p_{cat}" in st.session_state: st.session_state[f"new_p_{cat}"] = 10
         st.toast("✅ Gespeichert!", icon="💾")
         st.rerun()
 
