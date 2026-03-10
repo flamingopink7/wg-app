@@ -279,7 +279,7 @@ if st.session_state.authenticated:
         [data-testid="stWidgetLabel"] {{ display: none !important; }}
         
         /* Das Layout der einzelnen Radio-Optionen (Icons) */
-        [data-testid="stRadio"] div[role="radiogroup"] > label {{
+        [data-testid="stRadio"] label {{
             height: 65px !important; width: 65px !important;
             padding: 0 !important; margin-bottom: 5px;
             display: flex; justify-content: center !important; align-items: center !important;
@@ -330,18 +330,19 @@ icon_url_map = {
 
 icon_css = ""
 # Wir iterieren nur ueber die Menuepunkte, die dieser User logisch auch sehen darf (z.B. kein Admin Icon fuer non-Admins)
+# stWidgetLabel ist label 1, daher starten die Radio-Optionen bei label 2.
 for i, key in enumerate(icon_keys):
     icon_css += f"""
-    [data-testid="stRadio"] div[role="radiogroup"] > label:nth-child({i+1}) {{
+    [data-testid="stRadio"] label:nth-of-type({i+2}) {{
         background-image: url('{icon_url_map[key]}');
         background-size: 35px; background-repeat: no-repeat; background-position: center 45%;
     }}
     """
 
 # Das selektierte Icon nochmal vergroessert formatieren
-selected_index = icon_keys.index(selected_icon) + 1
+selected_index = icon_keys.index(selected_icon)
 icon_css += f"""
-    [data-testid="stRadio"] div[role="radiogroup"] > label:nth-child({selected_index}) {{
+    [data-testid="stRadio"] label:nth-of-type({selected_index + 2}) {{
         background-size: 45px !important;
         filter: brightness(0.8);
         transition: transform 0.2s, background-size 0.2s;
