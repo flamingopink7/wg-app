@@ -154,14 +154,14 @@ st.markdown("""
     
     .block-container { 
         height: 100vh; overflow-y: auto;
-        padding-left: 90px !important; padding-right: 15px !important;
+        padding-left: 72px !important; padding-right: 15px !important;
         padding-top: 1.5rem !important; padding-bottom: 80px !important;
     }
 
     /* SCHMALE ICON-SEITENLEISTE */
     [data-testid="stRadio"] {
         position: fixed !important; top: 0 !important; left: 0 !important;
-        width: 80px !important; height: 100vh !important;
+        width: 65px !important; height: 100vh !important;
         background-color: var(--secondary-background-color) !important;
         z-index: 999999 !important; padding-top: 30px !important;
         border-right: 1px solid #ddd; display: flex; flex-direction: column; align-items: center;
@@ -169,7 +169,7 @@ st.markdown("""
 
     /* Das Layout der einzelnen Radio-Optionen (Icons) */
     [data-testid="stRadio"] label {
-        height: 80px !important; width: 80px !important;
+        height: 65px !important; width: 65px !important;
         padding: 0 !important; margin-bottom: 5px;
         display: flex; justify-content: center !important; align-items: center !important;
         cursor: pointer;
@@ -185,8 +185,8 @@ st.markdown("""
         font-size: 0px !important;
     } 
     
-    /* Widget-Titel komplett verstecken */
-    [data-testid="stWidgetLabel"] { display: none !important; }
+    /* Widget-Titel der Navigation komplett verstecken */
+    [data-testid="stRadio"] [data-testid="stWidgetLabel"] { display: none !important; }
 
     [data-testid="stRadio"] label:nth-of-type(1) {
         background-image: url('app/static/001.png');
@@ -270,6 +270,11 @@ if not st.session_state.authenticated:
             padding: 2rem !important; 
             max-width: 500px; /* Hält das Login-Fenster schmal und mittig */
             margin: 0 auto;
+        }
+        /* Anmeldebutton kleiner machen */
+        .stButton > button {
+            min-height: 45px !important;
+            font-size: 1rem !important;
         }
     </style>
     """, unsafe_allow_html=True)
