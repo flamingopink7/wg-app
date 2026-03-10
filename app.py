@@ -448,6 +448,7 @@ elif active_tab == "Punkte":
         with st.expander(f"📍 {cat}", expanded=False):
             ct = current_tasks[current_tasks["Category"] == cat]
             if not ct.empty:
+                ct = ct.sort_values("Points", ascending=False)
                 for r in ct.itertuples():
                     # Rendert einen Button pro Aufgabe
                     if st.button(f"{r.Task} ({r.Points}P)", key=f"p_{r.Index}"):
@@ -522,6 +523,7 @@ elif active_tab == "Admin" and st.session_state.is_admin:
         with st.expander(f"⚙️ {cat}", expanded=False):
             ct = df_tasks[df_tasks["Category"] == cat].copy()
             if not ct.empty:
+                ct = ct.sort_values("Points", ascending=False)
                 for i, r in ct.iterrows():
                     col1, col2 = st.columns([3, 1])
                     new_p = col1.number_input(r['Task'], value=0 if pd.isna(r['Points']) else int(r['Points']), step=1, key=f"upd_{i}")
