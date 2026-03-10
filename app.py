@@ -154,25 +154,46 @@ st.markdown(f"""
     
     .block-container {{ 
         height: 100vh; overflow-y: auto;
-        padding-left: 75px !important; padding-right: 15px !important;
+        padding-left: 90px !important; padding-right: 15px !important;
         padding-top: 1.5rem !important; padding-bottom: 80px !important;
     }}
 
     /* SCHMALE ICON-SEITENLEISTE */
     [data-testid="stRadio"] {{
         position: fixed !important; top: 0 !important; left: 0 !important;
-        width: 65px !important; height: 100vh !important;
+        width: 80px !important; height: 100vh !important;
         background-color: var(--secondary-background-color) !important;
-        z-index: 999999 !important; padding-top: 20px !important;
+        z-index: 999999 !important; padding-top: 30px !important;
         border-right: 1px solid #ddd; display: flex; flex-direction: column; align-items: center;
     }}
-    [data-testid="stWidgetLabel"] {{ display: none !important; }}
     
     /* Punkt und Text verstecken, um Platz für Bilder zu machen */
     [data-baseweb="radio"] > div:first-child {{ display: none !important; }}
     [data-testid="stRadio"] p {{ display: none !important; }} 
     
-    /* Globale Icon-Definitionen entfernt, werden dynamisch per User-Rolle gesetzt */
+    [data-testid="stRadio"] label:nth-of-type(1) {{
+        background-image: url('app/static/001.png');
+        background-size: 45px; background-repeat: no-repeat; background-position: center;
+    }}
+    [data-testid="stRadio"] label:nth-of-type(2) {{
+        background-image: url('app/static/002.png');
+        background-size: 45px; background-repeat: no-repeat; background-position: center;
+    }}
+    [data-testid="stRadio"] label:nth-of-type(3) {{
+        background-image: url('app/static/icon.png');
+        background-size: 45px; background-repeat: no-repeat; background-position: center;
+    }}
+    /* Das Admin-Icon (4. Element) */
+    [data-testid="stRadio"] label:nth-of-type(4) {{
+        background-image: url('app/static/003.png');
+        background-size: 45px; background-repeat: no-repeat; background-position: center;
+    }}
+    /* Das Logout-Icon (letztes Element) */
+    [data-testid="stRadio"] label:last-of-type {{
+        background-image: url('app/static/004.png');
+        background-size: 45px; background-repeat: no-repeat; background-position: center;
+        margin-top: auto; margin-bottom: 30px;
+    }}
 
     /* Stealth Mode */
     [data-testid="collapsedControl"], [data-testid="stSidebar"], 
@@ -260,31 +281,30 @@ if not st.session_state.authenticated:
 if st.session_state.authenticated:
     st.markdown("""
     <style>
-        .block-container {{ 
+        .block-container { 
             height: 100vh; overflow-y: auto;
-            padding-left: 75px !important;  /* WICHTIG: Platz für schmale Sidebar! */
+            padding-left: 90px !important;  /* WICHTIG: Platz für schmale Sidebar! */
             padding-right: 15px !important; padding-top: 1.5rem !important; padding-bottom: 80px !important;
             -webkit-overflow-scrolling: touch;
-        }}
+        }
         
         /* Die statische, schmale Icon-Leiste am linken Rand */
-        [data-testid="stRadio"] {{
+        [data-testid="stRadio"] {
             position: fixed !important; top: 0 !important; left: 0 !important;
-            width: 65px !important; height: 100vh !important;
+            width: 80px !important; height: 100vh !important;
             background-color: var(--secondary-background-color) !important;
-            z-index: 999999 !important; padding-top: 20px !important;
+            z-index: 999999 !important; padding-top: 30px !important;
             border-right: 1px solid #ddd; display: flex; flex-direction: column; align-items: center;
             box-shadow: 2px 0 5px rgba(0,0,0,0.05);
-        }}
-        [data-testid="stWidgetLabel"] {{ display: none !important; }}
+        }
         
         /* Das Layout der einzelnen Radio-Optionen (Icons) */
-        [data-testid="stRadio"] label {{
-            height: 65px !important; width: 65px !important;
+        [data-testid="stRadio"] label {
+            height: 80px !important; width: 80px !important;
             padding: 0 !important; margin-bottom: 5px;
             display: flex; justify-content: center !important; align-items: center !important;
             cursor: pointer;
-        }}
+        }
         
         /* Die Emojis zentrieren und Basis-Größe festlegen */
         [data-testid="stRadio"] p {
@@ -307,10 +327,10 @@ if st.session_state.authenticated:
 # ==========================================
 # 7. DIE ICON-NAVIGATION (SIDEBAR)
 # ==========================================
-nav_options = {"Stand": "Stand", "Punkte": "Punkte", "Verlauf": "Verlauf"}
+nav_options = {"📊": "Stand", "➕": "Punkte", "📜": "Verlauf"}
 if st.session_state.is_admin:
-    nav_options["Admin"] = "Admin"
-nav_options["Abmelden"] = "Abmelden"
+    nav_options["⚙️"] = "Admin"
+nav_options["🚪"] = "Abmelden"
 
 # Auslesen aller verfügbaren Icons als Liste
 icon_keys = list(nav_options.keys())
@@ -319,42 +339,21 @@ icon_keys = list(nav_options.keys())
 selected_icon = st.radio("Menü", icon_keys, label_visibility="collapsed")
 active_tab = nav_options[selected_icon]
 
-# --- DYNAMISCHES CSS FÜR DIE ICONS ---
-icon_url_map = {
-    "Stand": "static/001.png",
-    "Punkte": "static/002.png",
-    "Verlauf": "static/icon.png",
-    "Admin": "static/003.png",
-    "Abmelden": "static/004.png"
-}
+# --- DYNAMISCHES CSS FÜR DAS GEWÄHLTE ICON ---
+# Findet heraus, das wievielte Icon gewählt wurde (Index beginnt bei 1 für CSS)
+selected_index = icon_keys.index(selected_icon) + 1
 
-icon_css = ""
-# Wir iterieren nur ueber die Menuepunkte, die dieser User logisch auch sehen darf (z.B. kein Admin Icon fuer non-Admins)
-# stWidgetLabel ist label 1, daher starten die Radio-Optionen bei label 2.
-for i, key in enumerate(icon_keys):
-    icon_css += f"""
-    [data-testid="stRadio"] label:nth-of-type({i+2}) {{
-        background-image: url('{icon_url_map[key]}');
-        background-size: 35px; background-repeat: no-repeat; background-position: center 45%;
-    }}
-    """
-
-# Das selektierte Icon nochmal vergroessert formatieren
-selected_index = icon_keys.index(selected_icon)
-icon_css += f"""
-    [data-testid="stRadio"] label:nth-of-type({selected_index + 2}) {{
-        background-size: 45px !important;
+# Injiziert CSS, das NUR das gewählte Icon vergrößert
+st.markdown(f"""
+<style>
+    [data-testid="stRadio"] label:nth-of-type({selected_index}) {{
+        background-size: 60px !important;
         filter: brightness(0.8);
         transition: transform 0.2s, background-size 0.2s;
         transform: scale(1.05);
     }}
-"""
-
-st.markdown(f"<style>{icon_css}</style>", unsafe_allow_html=True)
-
-# Dashboard statisch machen (Scrollen deaktivieren auf dem Stand-Tab)
-if active_tab == "Stand":
-    st.markdown("<style>.block-container { overflow-y: hidden !important; }</style>", unsafe_allow_html=True)
+</style>
+""", unsafe_allow_html=True)
 
 
 # ==========================================
