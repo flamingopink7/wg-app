@@ -171,24 +171,29 @@ st.markdown(f"""
     [data-baseweb="radio"] > div:first-child {{ display: none !important; }}
     [data-testid="stRadio"] p {{ display: none !important; }} 
     
-    [data-testid="stRadio"] label:nth-of-type(1) {{
+    /* Das allererste Label ist der unsichtbare Widget-Titel von Streamlit. Komplett verstecken! */
+    [data-testid="stRadio"] label:first-of-type {{
+        display: none !important;
+    }}
+
+    [data-testid="stRadio"] label:nth-of-type(2) {{
         background-image: url('app/static/001.png');
         background-size: 45px; background-repeat: no-repeat; background-position: center;
     }}
-    [data-testid="stRadio"] label:nth-of-type(2) {{
+    [data-testid="stRadio"] label:nth-of-type(3) {{
         background-image: url('app/static/002.png');
         background-size: 45px; background-repeat: no-repeat; background-position: center;
     }}
-    [data-testid="stRadio"] label:nth-of-type(3) {{
+    [data-testid="stRadio"] label:nth-of-type(4) {{
         background-image: url('app/static/icon.png');
         background-size: 45px; background-repeat: no-repeat; background-position: center;
     }}
-    /* Das Admin-Icon (4. Element) */
-    [data-testid="stRadio"] label:nth-of-type(4) {{
+    /* Das Admin-Icon */
+    [data-testid="stRadio"] label:nth-of-type(5) {{
         background-image: url('app/static/003.png');
         background-size: 45px; background-repeat: no-repeat; background-position: center;
     }}
-    /* Das Logout-Icon (letztes Element) */
+    /* Das Logout-Icon (letztes Element überschreibt Admin-Icon bei normalen Usern) */
     [data-testid="stRadio"] label:last-of-type {{
         background-image: url('app/static/004.png');
         background-size: 45px; background-repeat: no-repeat; background-position: center;
@@ -306,6 +311,11 @@ if st.session_state.authenticated:
             cursor: pointer;
         }
         
+        /* Das allererste Label ist der unsichtbare Widget-Titel von Streamlit. Komplett verstecken! */
+        [data-testid="stRadio"] label:first-of-type {
+            display: none !important;
+        }
+        
         /* Die Emojis zentrieren und Basis-Größe festlegen */
         [data-testid="stRadio"] p {
             font-size: 1.8rem !important; margin: 0 !important; text-align: center;
@@ -340,8 +350,8 @@ selected_icon = st.radio("Menü", icon_keys, label_visibility="collapsed")
 active_tab = nav_options[selected_icon]
 
 # --- DYNAMISCHES CSS FÜR DAS GEWÄHLTE ICON ---
-# Findet heraus, das wievielte Icon gewählt wurde (Index beginnt bei 1 für CSS)
-selected_index = icon_keys.index(selected_icon) + 1
+# Findet heraus, das wievielte Icon gewählt wurde (Index beginnt bei 1 für CSS, aber +1 für den versteckten Titel = +2)
+selected_index = icon_keys.index(selected_icon) + 2
 
 # Injiziert CSS, das NUR das gewählte Icon vergrößert
 st.markdown(f"""
