@@ -448,7 +448,7 @@ elif active_tab == "Punkte":
         with st.expander(f"📍 {cat}", expanded=False):
             ct = current_tasks[current_tasks["Category"] == cat]
             if not ct.empty:
-                ct = ct.sort_values("Points", ascending=False)
+                ct = ct.sort_values("Points", ascending=True)
                 for r in ct.itertuples():
                     # Rendert einen Button pro Aufgabe
                     if st.button(f"{r.Task} ({r.Points}P)", key=f"p_{r.Index}"):
