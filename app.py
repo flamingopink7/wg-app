@@ -406,7 +406,8 @@ if active_tab == "Stand":
     cs, ce, pkg, cn = get_cycle_info(date.today())
     kw_start = cs.isocalendar()[1]
     kw_end = ce.isocalendar()[1]
-    st.info(f"📍 **KW{kw_start} & KW{kw_end}** | Strafe: {pkg}")
+    #    st.info(f"📍 **KW{kw_start} & KW{kw_end}** | Strafe: {pkg}") #mit strafenanzeige
+    st.info(f"📍 **KW{kw_start} & KW{kw_end}**")
     
     if not df.empty:
         df['Datum'] = pd.to_datetime(df['timestamp']).dt.date
@@ -496,13 +497,15 @@ elif active_tab == "Verlauf":
             if st.session_state.team == winner or winner == "Unentschieden":
                 st.success(f"**KW{kw_s} & KW{kw_e}** ({s.strftime('%d.%m')} - {e.strftime('%d.%m')})  \n"
                            f"SaNi: **{vs}** | LiSa: **{vl}**  \n"
-                           f"Gewinner: **{winner}**  \n"
-                           f"{p}")
+                           #               f"Gewinner: **{winner}**  \n" #mit strafenanzeige
+                           #               f"{p}")
+                           f"Gewinner: **{winner}**")
             else:
                 st.error(f"**KW{kw_s} & KW{kw_e}** ({s.strftime('%d.%m')} - {e.strftime('%d.%m')})  \n"
                          f"SaNi: **{vs}** | LiSa: **{vl}**  \n"
-                         f"Gewinner: **{winner}**  \n"
-                         f"{p}")
+                           #               f"Gewinner: **{winner}**  \n" #mit strafenanzeige
+                           #               f"{p}")
+                         f"Gewinner: **{winner}**")
     else: st.info("Keine Daten.")
 
 # TAB 4: ADMIN BEREICH
