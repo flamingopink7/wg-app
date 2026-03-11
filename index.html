@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WG App</title>
+    <title>WG App v15</title>
     <link rel="manifest" href="./manifest.json" />
     <link rel="icon" href="./static/icon.png" />
     <link rel="apple-touch-icon" href="./static/icon.png" />
@@ -21,22 +21,25 @@
         
         .btn-primary { width: 100%; min-height: 50px; background-color: #FF4B4B; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; }
         .btn-primary:active { transform: scale(0.98); background-color: #e04343; }
-        .btn-danger { background-color: #ffeaea; color: #dc3545; border: 1px solid #dc3545; border-radius: 6px; padding: 6px 10px; cursor: pointer; font-weight: bold; font-size: 12px; }
-        .btn-edit { background-color: #e8f4f8; color: #007acc; border: 1px solid #007acc; border-radius: 6px; padding: 6px 10px; cursor: pointer; font-weight: bold; font-size: 12px; }
+        .btn-danger { background-color: #ffeaea; color: #dc3545; border: 1px solid #dc3545; border-radius: 6px; padding: 6px 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .btn-edit { background-color: #e8f4f8; color: #007acc; border: 1px solid #007acc; border-radius: 6px; padding: 6px 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         
+        /* Icon Styling */
+        .emoji-icon { height: 1.1em; width: 1.1em; vertical-align: middle; margin-right: 5px; }
+        .action-icon { height: 20px; width: 20px; object-fit: contain; }
+        .delete-icon { height: 20px; width: 20px; object-fit: contain; }
+
         /* App Layout */
         #app-screen { display: none; height: 100vh; flex-direction: column; }
         
-        /* Top Header (Jetzt transparent/gleichfarbig) */
-        .top-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 20px 10px 20px; background-color: transparent; z-index: 10; }
-        .logout-btn { background: transparent; border: none; cursor: pointer; padding: 5px; border-radius: 50%; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+        /* Top Header */
+        .top-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 20px 10px 20px; background-color: transparent; }
+        .logout-btn { background: transparent; border: none; cursor: pointer; padding: 5px; border-radius: 50%; }
         .logout-btn img { width: 28px; height: 28px; object-fit: contain; }
-        .logout-btn:active { background: #e0e2e6; transform: scale(0.95); }
         
-        /* Bottom Navigation */
-        .bottom-nav { width: 100%; height: 80px; background-color: #e0e2e6; display: flex; flex-direction: row; justify-content: space-around; align-items: center; position: fixed; bottom: 0; left: 0; z-index: 100; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); padding-bottom: env(safe-area-inset-bottom); }
-        /* Buttons etwas kleiner, damit 5 Stück gut nebeneinander passen */
-        .nav-btn { width: 50px; height: 50px; border-radius: 12px; border: none; background: transparent; cursor: pointer; padding: 6px; transition: 0.2s; display: flex; justify-content: center; align-items: center; }
+        /* Navigation */
+        .bottom-nav { width: 100%; height: 80px; background-color: #e0e2e6; display: flex; justify-content: space-around; align-items: center; position: fixed; bottom: 0; left: 0; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+        .nav-btn { width: 50px; height: 50px; border-radius: 12px; border: none; background: transparent; cursor: pointer; padding: 6px; display: flex; justify-content: center; align-items: center; }
         .nav-btn img { width: 100%; height: 100%; object-fit: contain; }
         .nav-btn.active { background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         
@@ -44,134 +47,102 @@
         .content { flex-grow: 1; padding: 0 20px 100px 20px; overflow-y: auto; box-sizing: border-box; }
         
         /* Accordion */
-        .accordion { background-color: white; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden; }
-        .accordion-header { background-color: white; padding: 18px 20px; font-weight: bold; font-size: 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .accordion { background-color: white; border-radius: 10px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden; }
+        .accordion-header { background-color: white; padding: 18px 20px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
         .accordion-content { display: none; padding: 10px 20px 20px 20px; background-color: #fcfcfc; border-top: 1px solid #eee; }
-        .task-btn { width: 100%; min-height: 55px; border-radius: 8px; font-size: 14px; background: white; border: 1px solid #ddd; margin-bottom: 8px; text-align: left; padding: 0 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.1s; }
-        .task-btn:active { background-color: #e8eaed; transform: scale(0.98); border-color: #FF4B4B; }
+        .task-btn { width: 100%; min-height: 55px; border-radius: 8px; background: white; border: 1px solid #ddd; margin-bottom: 8px; text-align: left; padding: 0 15px; display: flex; justify-content: space-between; align-items: center; }
         
-        /* Dashboard Side-by-Side */
+        /* Dashboard */
         .team-totals-container { display: flex; justify-content: space-between; gap: 10px; margin-top: 10px; flex-wrap: nowrap; }
-        .team-total-box { flex: 1; background: white; padding: 15px 10px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); text-align: center; border-bottom: 4px solid #FF4B4B; min-width: 0; }
-        .team-total-name { font-size: 14px; color: #555; margin-bottom: 5px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .team-total-score { font-size: 22px; font-weight: bold; color: #31333F; margin-bottom: 8px; }
+        .team-total-box { flex: 1; background: white; padding: 15px 10px; border-radius: 12px; text-align: center; border-bottom: 4px solid #FF4B4B; min-width: 0; }
+        .team-total-score { font-size: 22px; font-weight: bold; margin-bottom: 8px; }
         .team-legend { font-size: 11px; color: #666; line-height: 1.4; }
         
-        /* History & Admin */
-        .history-item { background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
-        .history-date { font-size: 12px; color: #888; margin-bottom: 5px; }
-        .admin-card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .admin-task-item { background: white; padding: 12px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
-        .admin-task-actions { display: flex; gap: 6px; }
-        
-        #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 24px; border-radius: 30px; font-weight: bold; opacity: 0; transition: opacity 0.3s; z-index: 1000; pointer-events: none; }
-        .info-box { background-color: #e8f4f8; color: #007acc; padding: 15px; border-radius: 8px; font-weight: bold; margin-bottom: 20px; border-left: 5px solid #007acc; font-size: 14px; }
-        
-        /* Custom Modal (Popup) */
+        /* Modal */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(3px); z-index: 2000; justify-content: center; align-items: center; padding: 20px; }
-        .modal-content { background: white; padding: 25px; border-radius: 12px; width: 100%; max-width: 320px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
-        .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
-        .btn-cancel { background: #f0f2f6; color: #333; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-cancel:active { background: #e0e2e6; }
+        .modal-content { background: white; padding: 25px; border-radius: 12px; width: 100%; max-width: 320px; }
+        
+        #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 24px; border-radius: 30px; font-weight: bold; opacity: 0; transition: opacity 0.3s; z-index: 1000; }
+        .info-box { background-color: #e8f4f8; color: #007acc; padding: 15px; border-radius: 8px; font-weight: bold; margin-bottom: 20px; border-left: 5px solid #007acc; font-size: 14px; }
     </style>
 </head>
 <body>
 
     <div id="edit-modal" class="modal-overlay">
         <div class="modal-content">
-            <h3 id="modal-title" style="margin-top:0;">Bearbeiten</h3>
+            <h3 id="modal-title">Bearbeiten</h3>
             <input type="hidden" id="modal-task-id">
             <input type="hidden" id="modal-edit-type"> 
-            
-            <input type="text" id="modal-input-name" placeholder="Neuer Name" style="display:none; margin-bottom: 10px;">
-            <input type="number" id="modal-input-points" placeholder="Neue Punkte" style="display:none; margin-bottom: 10px;">
-            
-            <div class="modal-buttons">
-                <button class="btn-cancel" onclick="closeModal()">Abbrechen</button>
-                <button class="btn-primary" style="width: auto; min-height: 40px; padding: 0 20px;" onclick="saveModal()">Speichern</button>
+            <input type="text" id="modal-input-name" placeholder="Neuer Name" style="display:none;">
+            <input type="number" id="modal-input-points" placeholder="Neue Punkte" style="display:none;">
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
+                <button class="btn-cancel" onclick="closeModal()" style="border:none; background:#f0f2f6; padding:10px 15px; border-radius:8px;">Abbrechen</button>
+                <button class="btn-primary" style="width:auto; min-height:40px; padding:0 20px;" onclick="saveModal()">Speichern</button>
             </div>
         </div>
     </div>
 
     <div id="login-screen">
         <div class="login-box">
-            <h1 style="text-align: center; margin-top: 0;">🏔️ WG Login</h1>
-            <label>User</label>
+            <h1 style="text-align: center;">🏔️ WG Login</h1>
             <input type="text" id="username" placeholder="Name">
-            <label>PW</label>
             <input type="password" id="password" placeholder="Passwort">
             <button class="btn-primary" onclick="login()">Anmelden</button>
-            <div id="error-msg" style="color: red; text-align: center; margin-top: 15px; display: none; font-weight: bold;">Passwort falsch!</div>
+            <div id="error-msg" style="color: red; text-align: center; margin-top: 15px; display: none;">Passwort falsch!</div>
         </div>
     </div>
 
     <div id="app-screen">
         <div class="top-header">
             <h2 id="welcome-text" style="margin:0;">Hallo!</h2>
-            <button class="logout-btn" onclick="logout()" title="Abmelden">
-                <img src="./static/004.png" alt="Logout">
+            <button class="logout-btn" onclick="logout()">
+                <img src="./static/004.png">
             </button>
         </div>
 
         <div class="content">
             <div id="tab-stand" style="display: none;">
                 <div id="cycle-info" class="info-box" style="margin-top: 10px; text-align: center;">Lade Zyklus...</div>
-                <div id="chart-div" style="width:100%; height:380px; max-width: 600px; margin: 0 auto;"></div>
+                <div id="chart-div" style="width:100%; height:380px;"></div>
                 <div id="team-totals-area" class="team-totals-container"></div>
             </div>
             
             <div id="tab-punkte">
-                <h3 style="margin-top:0;">Punkte eintragen</h3>
+                <h3>Punkte eintragen</h3>
                 <div id="accordion-container"><i>Lade Aufgaben...</i></div>
             </div>
             
             <div id="tab-verlauf" style="display: none;">
-                <h3 style="margin-top: 0;">Letzte Aktivitäten</h3>
-                <div id="history-container"><i>Lade Verlauf...</i></div>
+                <h3>Letzte Aktivitäten</h3>
+                <div id="history-container"></div>
             </div>
 
             <div id="tab-rueckblick" style="display: none;">
-                <h3 style="margin-top: 0;">Rückblick</h3>
-                <p style="font-size: 14px; color: #666;">Die Ergebnisse der letzten 5 Zyklen.</p>
-                <div id="rueckblick-container"><i>Lade Historie...</i></div>
+                <h3>Rückblick</h3>
+                <div id="rueckblick-container"></div>
             </div>
             
             <div id="tab-admin" style="display: none;">
-                <h3 style="margin-top: 0;">⚙️ Aufgaben verwalten</h3>
+                <h3><img src="./static/013.png" class="emoji-icon"> Aufgaben verwalten</h3>
                 <div class="admin-card">
-                    <h4 style="margin-top:0; color:#31333F;">➕ Neue Aufgabe</h4>
-                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                        <select id="new-cat" style="margin:0; width: 60%;">
-                            <option value="Quick-Wins">Quick-Wins</option>
-                            <option value="Core-Tasks">Core-Tasks</option>
-                            <option value="Deep-Clean">Deep-Clean</option>
-                        </select>
-                        <input type="number" id="new-points" placeholder="Punkte" style="margin:0; width: 40%;">
+                    <h4>➕ Neue Aufgabe</h4>
+                    <div style="display: flex; gap: 10px;">
+                        <select id="new-cat" style="width: 60%;"><option value="Quick-Wins">Quick-Wins</option><option value="Core-Tasks">Core-Tasks</option><option value="Deep-Clean">Deep-Clean</option></select>
+                        <input type="number" id="new-points" placeholder="Pkt" style="width: 40%;">
                     </div>
-                    <input type="text" id="new-task" placeholder="Name der Aufgabe" style="margin-bottom: 10px;">
+                    <input type="text" id="new-task" placeholder="Aufgabenname">
                     <button class="btn-primary" style="min-height: 40px;" onclick="addNewTask()">Hinzufügen</button>
                 </div>
-                <h4 style="margin-top:25px; margin-bottom:10px;">📋 Bestehende bearbeiten</h4>
-                <div id="admin-tasks-container"><i>Lade Daten...</i></div>
+                <div id="admin-tasks-container"></div>
             </div>
         </div>
 
         <div class="bottom-nav">
-            <button class="nav-btn" id="nav-stand" onclick="switchTab('stand')">
-                <img src="./static/001.png" alt="Stand">
-            </button>
-            <button class="nav-btn active" id="nav-punkte" onclick="switchTab('punkte')">
-                <img src="./static/002.png" alt="Punkte">
-            </button>
-            <button class="nav-btn" id="nav-verlauf" onclick="switchTab('verlauf')">
-                <img src="./static/icon.png" alt="Verlauf">
-            </button>
-            <button class="nav-btn" id="nav-rueckblick" onclick="switchTab('rueckblick')">
-                <img src="./static/006.png" alt="Rückblick">
-            </button>
-            <button class="nav-btn" id="nav-admin" onclick="switchTab('admin')" style="display: none;">
-                <img src="./static/003.png" alt="Admin">
-            </button>
+            <button class="nav-btn" id="nav-stand" onclick="switchTab('stand')"><img src="./static/001.png"></button>
+            <button class="nav-btn active" id="nav-punkte" onclick="switchTab('punkte')"><img src="./static/002.png"></button>
+            <button class="nav-btn" id="nav-verlauf" onclick="switchTab('verlauf')"><img src="./static/icon.png"></button>
+            <button class="nav-btn" id="nav-rueckblick" onclick="switchTab('rueckblick')"><img src="./static/006.png"></button>
+            <button class="nav-btn" id="nav-admin" onclick="switchTab('admin')" style="display: none;"><img src="./static/003.png"></button>
         </div>
     </div>
 
@@ -183,12 +154,8 @@
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let currentUser = null;
-        let allPointsCache = []; // Speichert alle Punkte global
-
-        const userColors = {
-            'Livio': '#4A90E2', 'Salwa': '#E94A47', 
-            'Saphira': '#F5A623', 'Nils': '#50E3C2' 
-        };
+        let allPointsCache = []; 
+        const userColors = { 'Livio': '#4A90E2', 'Salwa': '#E94A47', 'Saphira': '#F5A623', 'Nils': '#50E3C2' };
 
         window.onload = () => {
             const savedUser = localStorage.getItem('wg_user');
@@ -205,67 +172,40 @@
         async function login() {
             const userIn = document.getElementById('username').value.trim();
             const passIn = document.getElementById('password').value;
-            if (!userIn || !passIn) return;
-
             const hashedPass = await hashPassword(passIn);
-            const { data, error } = await supabaseClient.from('wg_users').select('*').ilike('name', userIn).single();
-
+            const { data } = await supabaseClient.from('wg_users').select('*').ilike('name', userIn).single();
             if (data && data.password_hash === hashedPass) {
                 currentUser = data;
                 localStorage.setItem('wg_user', JSON.stringify(data));
                 startApp();
-            } else {
-                document.getElementById('error-msg').style.display = 'block';
-            }
+            } else { document.getElementById('error-msg').style.display = 'block'; }
         }
 
         async function startApp() {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-screen').style.display = 'flex';
-            document.getElementById('welcome-text').innerText = `Hallo ${currentUser.name}!`; // Emoji entfernt
-            
+            document.getElementById('welcome-text').innerText = `Hallo ${currentUser.name}`;
             if (currentUser.is_admin) document.getElementById('nav-admin').style.display = 'flex';
-            
-            // Lade einmal alle Punkte für alle Auswertungen
             const { data } = await supabaseClient.from('wg_points').select('*');
             if(data) allPointsCache = data;
-
-            loadTasksAccordion();
-            loadStandings();
-            loadHistory();
-            loadRueckblick();
+            loadTasksAccordion(); loadStandings(); loadHistory(); loadRueckblick();
             if(currentUser.is_admin) loadAdminTasks();
         }
 
         function logout() {
-            currentUser = null;
             localStorage.removeItem('wg_user');
-            document.getElementById('login-screen').style.display = 'flex';
-            document.getElementById('app-screen').style.display = 'none';
-            document.getElementById('password').value = '';
-            document.getElementById('nav-admin').style.display = 'none';
-            switchTab('punkte');
+            location.reload();
         }
 
         function switchTab(tabName) {
             const tabs = ['stand', 'punkte', 'verlauf', 'rueckblick', 'admin'];
             tabs.forEach(t => {
                 document.getElementById(`tab-${t}`).style.display = t === tabName ? 'block' : 'none';
-                if(document.getElementById(`nav-${t}`)) document.getElementById(`nav-${t}`).classList.toggle('active', t === tabName);
+                document.getElementById(`nav-${t}`).classList.toggle('active', t === tabName);
             });
             if(tabName === 'stand') setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
         }
 
-        function showToast(text) {
-            const toast = document.getElementById('toast');
-            toast.innerText = text;
-            toast.style.opacity = '1';
-            setTimeout(() => { toast.style.opacity = '0'; }, 3000);
-        }
-
-        // ==========================================
-        // DATUM HILFSFUNKTIONEN
-        // ==========================================
         function getISOWeekNumber(d) {
             const date = new Date(d.getTime());
             date.setHours(0, 0, 0, 0);
@@ -274,315 +214,148 @@
             return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
         }
 
-        // ==========================================
-        // CUSTOM MODALS & ACCORDIONS
-        // ==========================================
-        function openEditNameModal(id, oldName) {
-            document.getElementById('modal-title').innerText = "Aufgabe umbenennen";
-            document.getElementById('modal-edit-type').value = "name";
-            document.getElementById('modal-task-id').value = id;
-            document.getElementById('modal-input-name').value = oldName;
-            document.getElementById('modal-input-name').style.display = "block";
-            document.getElementById('modal-input-points').style.display = "none";
-            document.getElementById('edit-modal').style.display = "flex";
-        }
-
-        function openEditPointsModal(id, oldPoints, taskName) {
-            document.getElementById('modal-title').innerText = `Punkte ändern (${taskName})`;
-            document.getElementById('modal-edit-type').value = "points";
-            document.getElementById('modal-task-id').value = id;
-            document.getElementById('modal-input-points').value = oldPoints;
-            document.getElementById('modal-input-points').style.display = "block";
-            document.getElementById('modal-input-name').style.display = "none";
-            document.getElementById('edit-modal').style.display = "flex";
-        }
-
-        function closeModal() { document.getElementById('edit-modal').style.display = "none"; }
-
-        async function saveModal() {
-            const id = document.getElementById('modal-task-id').value;
-            const type = document.getElementById('modal-edit-type').value;
-            
-            if (type === "name") {
-                const newName = document.getElementById('modal-input-name').value.trim();
-                if (!newName) return;
-                await supabaseClient.from('wg_tasks').update({ task: newName }).eq('id', id);
-                showToast('✅ Name aktualisiert!');
-            } else if (type === "points") {
-                const newPoints = parseInt(document.getElementById('modal-input-points').value);
-                if (isNaN(newPoints)) return;
-                await supabaseClient.from('wg_tasks').update({ points: newPoints }).eq('id', id);
-                showToast('✅ Punkte aktualisiert!');
-            }
-            
-            closeModal();
-            loadAdminTasks();
-            loadTasksAccordion();
-        }
-
         async function loadTasksAccordion() {
             const container = document.getElementById('accordion-container');
             const { data: tasks } = await supabaseClient.from('wg_tasks').select('*');
-            if (!tasks) return;
             const categories = ['Quick-Wins', 'Core-Tasks', 'Deep-Clean'];
             container.innerHTML = '';
-
             categories.forEach((cat, index) => {
                 const catTasks = tasks.filter(t => t.category === cat).sort((a, b) => a.points - b.points);
-                if (catTasks.length > 0) {
-                    let html = `<div class="accordion"><div class="accordion-header" onclick="toggleAccordion('cat-${index}')">📍 ${cat} <span>▼</span></div><div class="accordion-content" id="cat-${index}">`;
-                    catTasks.forEach(task => {
-                        html += `<button class="task-btn" onclick="savePoints('${task.task.replace(/'/g, "\\'")}', ${task.points})"><span>${task.task}</span><span style="color:#FF4B4B; font-weight:bold;">${task.points}P</span></button>`;
-                    });
-                    html += `</div></div>`;
-                    container.innerHTML += html;
-                }
+                let html = `<div class="accordion"><div class="accordion-header" onclick="toggleAccordion('cat-${index}')"><span><img src="./static/008.png" class="emoji-icon"> ${cat}</span> <span>▼</span></div><div class="accordion-content" id="cat-${index}">`;
+                catTasks.forEach(task => {
+                    html += `<button class="task-btn" onclick="savePoints('${task.task.replace(/'/g, "\\'")}', ${task.points})"><span>${task.task}</span><span style="color:#FF4B4B; font-weight:bold;">${task.points}P</span></button>`;
+                });
+                container.innerHTML += html + `</div></div>`;
             });
         }
 
         function toggleAccordion(id) {
-            const content = document.getElementById(id);
-            if (content.style.display === "block") content.style.display = "none";
-            else content.style.display = "block";
+            const el = document.getElementById(id);
+            el.style.display = (el.style.display === "block") ? "none" : "block";
         }
 
         async function savePoints(taskName, points) {
-            const { error } = await supabaseClient.from('wg_points').insert([{ user_name: currentUser.name, team: currentUser.team, task: taskName, points: points }]);
-            if (!error) {
-                showToast('✅ Punkte gespeichert!');
-                document.querySelectorAll('.accordion-content').forEach(el => el.style.display = "none");
-                
-                // Punkte-Cache updaten
-                const { data } = await supabaseClient.from('wg_points').select('*');
-                if(data) allPointsCache = data;
-                
-                loadStandings();
-                loadHistory();
-            }
+            await supabaseClient.from('wg_points').insert([{ user_name: currentUser.name, team: currentUser.team, task: taskName, points: points }]);
+            const toast = document.getElementById('toast');
+            toast.style.opacity = '1'; setTimeout(() => toast.style.opacity = '0', 3000);
+            const { data } = await supabaseClient.from('wg_points').select('*');
+            allPointsCache = data;
+            loadStandings(); loadHistory();
         }
 
-        // ==========================================
-        // ADMIN & VERLAUF
-        // ==========================================
-        async function loadHistory() {
+        function loadHistory() {
             const container = document.getElementById('history-container');
-            const history = [...allPointsCache].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 40);
-            
-            if (history.length === 0) { container.innerHTML = "Keine Aktivitäten."; return; }
-            
-            container.innerHTML = history.map(item => {
-                const dateObj = new Date(item.timestamp);
-                const canDelete = currentUser.is_admin || item.user_name === currentUser.name;
-                const deleteBtn = canDelete ? `<button class="btn-danger" onclick="deleteHistoryPoint(${item.id})">🗑️</button>` : '';
-
-                return `
-                    <div class="history-item">
-                        <div>
-                            <div class="history-date">${dateObj.toLocaleDateString('de-DE')} um ${dateObj.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr</div>
-                            <strong>${item.user_name}</strong>: <em>${item.task}</em> <span style="color: #FF4B4B; font-weight: bold;">(+${item.points})</span>
-                        </div>
-                        ${deleteBtn}
-                    </div>`;
-            }).join('');
+            const history = [...allPointsCache].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 30);
+            container.innerHTML = history.map(item => `
+                <div class="history-item">
+                    <div><div class="history-date">${new Date(item.timestamp).toLocaleString('de-DE')}</div>
+                    <strong>${item.user_name}</strong>: ${item.task} (+${item.points})</div>
+                    ${(currentUser.is_admin || item.user_name === currentUser.name) ? `<button class="btn-danger" onclick="deleteHistoryPoint(${item.id})"><img src="./static/009.png" class="delete-icon"></button>` : ''}
+                </div>`).join('');
         }
 
         async function deleteHistoryPoint(id) {
-            if(!confirm("Eintrag wirklich löschen?")) return;
+            if(!confirm("Löschen?")) return;
             await supabaseClient.from('wg_points').delete().eq('id', id);
-            showToast('🗑️ Gelöscht!');
-            
             const { data } = await supabaseClient.from('wg_points').select('*');
-            if(data) allPointsCache = data;
+            allPointsCache = data; loadHistory(); loadStandings();
+        }
+
+        function loadStandings() {
+            const baseDate = new Date('2024-01-01T00:00:00Z');
+            const cycleNum = Math.floor((new Date() - baseDate) / (1000 * 60 * 60 * 24) / 14);
+            const startDate = new Date(baseDate.getTime() + (cycleNum * 14) * 24 * 60 * 60 * 1000);
+            const endDate = new Date(startDate.getTime() + 13 * 24 * 60 * 60 * 1000);
             
-            loadHistory();
-            loadStandings();
+            document.getElementById('cycle-info').innerHTML = `<img src="./static/008.png" class="emoji-icon"> KW: ${getISOWeekNumber(startDate)}/${getISOWeekNumber(endDate)}; ${startDate.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'})} - ${endDate.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'})}`;
+
+            const current = allPointsCache.filter(p => { const d = new Date(p.timestamp); return d >= startDate && d <= new Date(endDate.getTime() + 86400000); });
+            let userTotals = {}, teamScores = {}, teamMembers = {};
+            const teams = ['LiSa', 'SaNi']; 
+            const orderedTeams = [currentUser.team, teams.find(t => t !== currentUser.team)];
+
+            orderedTeams.forEach(t => { teamScores[t] = 0; teamMembers[t] = new Set(); });
+            current.forEach(p => {
+                if(!userTotals[p.user_name]) userTotals[p.user_name] = { team: p.team, total: 0 };
+                userTotals[p.user_name].total += p.points;
+                teamScores[p.team] += p.points;
+                teamMembers[p.team].add(p.user_name);
+            });
+
+            let plotData = Object.entries(userTotals).map(([user, info]) => ({
+                x: [info.team], y: [info.total], name: user, type: 'bar', text: [String(info.total)], textposition: 'auto', marker: { color: userColors[user] || '#999' }
+            }));
+
+            if(plotData.length === 0) {
+                document.getElementById('chart-div').innerHTML = "<p style='text-align:center; margin-top:50px;'>Noch keine Punkte!</p>";
+            } else {
+                Plotly.newPlot('chart-div', plotData, { barmode: 'stack', margin: { t: 10, l: 30, r: 20, b: 30 }, showlegend: false, xaxis: { categoryorder: 'array', categoryarray: orderedTeams } }, { staticPlot: true });
+                document.getElementById('team-totals-area').innerHTML = orderedTeams.map(t => `
+                    <div class="team-total-box">
+                        <div class="team-total-name">Team ${t}</div>
+                        <div class="team-total-score">${teamScores[t]} Pkt</div>
+                        <div class="team-legend">${Array.from(teamMembers[t]).map(u => `<span style="color:${userColors[u]}">●</span> ${u}`).join('<br>')}</div>
+                    </div>`).join('');
+            }
+        }
+
+        function loadRueckblick() {
+            const container = document.getElementById('rueckblick-container');
+            const baseDate = new Date('2024-01-01T00:00:00Z');
+            const currentCycle = Math.floor((new Date() - baseDate) / (1000 * 60 * 60 * 24) / 14);
+            let html = '';
+            for (let i = 1; i <= 5; i++) {
+                const cNum = currentCycle - i; if(cNum < 0) break;
+                const start = new Date(baseDate.getTime() + (cNum * 14) * 86400000);
+                const end = new Date(start.getTime() + 13 * 86400000);
+                const p = allPointsCache.filter(x => { const d = new Date(x.timestamp); return d >= start && d <= new Date(end.getTime() + 86400000); });
+                let s = { 'LiSa': 0, 'SaNi': 0 }; p.forEach(x => s[x.team] += x.points);
+                const win = s[currentUser.team] > s[Object.keys(s).find(t => t !== currentUser.team)];
+                const lose = s[currentUser.team] < s[Object.keys(s).find(t => t !== currentUser.team)];
+                const status = win ? `<img src="./static/010.png" class="emoji-icon"> Gewonnen` : (lose ? `<img src="./static/011.png" class="emoji-icon"> Verloren` : '🤝 Remis');
+                html += `<div style="background:${win ? '#e6f4ea' : (lose ? '#fce8e6' : '#f1f3f4')}; padding:15px; border-radius:10px; margin-bottom:10px; border-left:5px solid ${win ? '#34a853' : (lose ? '#ea4335' : '#999')}">
+                    <small>KW ${getISOWeekNumber(start)}/${getISOWeekNumber(end)}</small><br><strong>${status}</strong><br>
+                    <small>Team ${currentUser.team}: ${s[currentUser.team]} Pkt | Gegenteam: ${s[Object.keys(s).find(t => t !== currentUser.team)]} Pkt</small></div>`;
+            }
+            container.innerHTML = html || 'Noch keine Daten.';
+        }
+
+        // ADMIN MODALS
+        function openEditNameModal(id, name) { document.getElementById('modal-title').innerText = "Name ändern"; document.getElementById('modal-edit-type').value = "name"; document.getElementById('modal-task-id').value = id; document.getElementById('modal-input-name').value = name; document.getElementById('modal-input-name').style.display = "block"; document.getElementById('modal-input-points').style.display = "none"; document.getElementById('edit-modal').style.display = "flex"; }
+        function openEditPointsModal(id, points) { document.getElementById('modal-title').innerText = "Punkte ändern"; document.getElementById('modal-edit-type').value = "points"; document.getElementById('modal-task-id').value = id; document.getElementById('modal-input-points').value = points; document.getElementById('modal-input-points').style.display = "block"; document.getElementById('modal-input-name').style.display = "none"; document.getElementById('edit-modal').style.display = "flex"; }
+        function closeModal() { document.getElementById('edit-modal').style.display = "none"; }
+        async function saveModal() {
+            const id = document.getElementById('modal-task-id').value;
+            if(document.getElementById('modal-edit-type').value === "name") await supabaseClient.from('wg_tasks').update({ task: document.getElementById('modal-input-name').value }).eq('id', id);
+            else await supabaseClient.from('wg_tasks').update({ points: parseInt(document.getElementById('modal-input-points').value) }).eq('id', id);
+            closeModal(); loadAdminTasks(); loadTasksAccordion();
         }
 
         async function loadAdminTasks() {
             const container = document.getElementById('admin-tasks-container');
             const { data: tasks } = await supabaseClient.from('wg_tasks').select('*');
-            if (!tasks) return;
-
             const categories = ['Quick-Wins', 'Core-Tasks', 'Deep-Clean'];
             container.innerHTML = '';
-
             categories.forEach((cat, index) => {
                 const catTasks = tasks.filter(t => t.category === cat).sort((a, b) => a.points - b.points);
-                if (catTasks.length > 0) {
-                    let html = `<div class="accordion"><div class="accordion-header" onclick="toggleAccordion('admin-cat-${index}')">📍 ${cat} <span>▼</span></div><div class="accordion-content" id="admin-cat-${index}">`;
-                    catTasks.forEach(task => {
-                        html += `
-                            <div class="admin-task-item">
-                                <div style="flex-grow: 1; padding-right: 10px;">
-                                    <strong>${task.task}</strong><br><span style="color:#FF4B4B; font-weight:bold; font-size:12px;">${task.points} Punkte</span>
-                                </div>
-                                <div class="admin-task-actions">
-                                    <button class="btn-edit" onclick="openEditNameModal(${task.id}, '${task.task.replace(/'/g, "\\'")}')" title="Name">✏️</button>
-                                    <button class="btn-edit" onclick="openEditPointsModal(${task.id}, ${task.points}, '${task.task.replace(/'/g, "\\'")}')" title="Punkte">🔢</button>
-                                    <button class="btn-danger" onclick="deleteTask(${task.id})" title="Löschen">🗑️</button>
-                                </div>
-                            </div>
-                        `;
-                    });
-                    html += `</div></div>`;
-                    container.innerHTML += html;
-                }
+                let html = `<div class="accordion"><div class="accordion-header" onclick="toggleAccordion('admin-cat-${index}')"><span><img src="./static/008.png" class="emoji-icon"> ${cat}</span> <span>▼</span></div><div class="accordion-content" id="admin-cat-${index}">`;
+                catTasks.forEach(task => {
+                    html += `<div class="admin-task-item" style="display:flex; justify-content:space-between; align-items:center; background:white; padding:10px; border-radius:8px; margin-bottom:5px; border:1px solid #ddd;">
+                        <div><strong>${task.task}</strong><br><small>${task.points} Pkt</small></div>
+                        <div style="display:flex; gap:5px;">
+                            <button class="btn-edit" onclick="openEditNameModal(${task.id}, '${task.task.replace(/'/g, "\\'")}')"><img src="./static/014.png" class="action-icon"></button>
+                            <button class="btn-edit" onclick="openEditPointsModal(${task.id}, ${task.points})"><img src="./static/015.png" class="action-icon"></button>
+                            <button class="btn-danger" onclick="deleteTask(${task.id})"><img src="./static/009.png" class="delete-icon"></button>
+                        </div></div>`;
+                });
+                container.innerHTML += html + `</div></div>`;
             });
         }
-
         async function addNewTask() {
-            const cat = document.getElementById('new-cat').value;
-            const name = document.getElementById('new-task').value.trim();
-            const points = parseInt(document.getElementById('new-points').value);
-            if(!name || isNaN(points)) return;
-            await supabaseClient.from('wg_tasks').insert([{ category: cat, task: name, points: points }]);
-            document.getElementById('new-task').value = ''; document.getElementById('new-points').value = '';
-            showToast('✅ Aufgabe hinzugefügt!');
+            await supabaseClient.from('wg_tasks').insert([{ category: document.getElementById('new-cat').value, task: document.getElementById('new-task').value, points: parseInt(document.getElementById('new-points').value) }]);
             loadAdminTasks(); loadTasksAccordion();
         }
-
-        async function deleteTask(id) {
-            if(!confirm("Aufgabe endgültig löschen?")) return;
-            await supabaseClient.from('wg_tasks').delete().eq('id', id);
-            showToast('🗑️ Aufgabe gelöscht!');
-            loadAdminTasks(); loadTasksAccordion();
-        }
-
-        // ==========================================
-        // DASHBOARD (Persönlich sortiert)
-        // ==========================================
-        function loadStandings() {
-            const baseDate = new Date('2024-01-01T00:00:00Z');
-            const today = new Date();
-            const cycleNum = Math.floor((today - baseDate) / (1000 * 60 * 60 * 24) / 14);
-            const startDate = new Date(baseDate.getTime() + (cycleNum * 14) * 24 * 60 * 60 * 1000);
-            const endDate = new Date(startDate.getTime() + 13 * 24 * 60 * 60 * 1000);
-            
-            const kwStart = getISOWeekNumber(startDate);
-            const kwEnd = getISOWeekNumber(endDate);
-            document.getElementById('cycle-info').innerText = `📍 KW: ${kwStart}/${kwEnd}; ${startDate.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })} - ${endDate.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}`;
-
-            const currentPoints = allPointsCache.filter(p => {
-                const pDate = new Date(p.timestamp);
-                return pDate >= startDate && pDate <= new Date(endDate.getTime() + 24*60*60*1000);
-            });
-
-            let userTotals = {}, teamScores = {}, teamMembers = {};
-            
-            // Finde alle existierenden Teams (damit auch 0 Punkte Teams gezeichnet werden)
-            const allKnownTeams = [...new Set(allPointsCache.map(p => p.team))];
-            let myTeam = currentUser.team;
-            let otherTeam = allKnownTeams.find(t => t !== myTeam) || (myTeam === 'LiSa' ? 'SaNi' : 'LiSa'); // Fallback
-            
-            // Initialisiere Scores mit 0
-            teamScores[myTeam] = 0;
-            teamScores[otherTeam] = 0;
-
-            currentPoints.forEach(p => {
-                if (!userTotals[p.user_name]) userTotals[p.user_name] = { team: p.team, total: 0 };
-                userTotals[p.user_name].total += p.points;
-                teamScores[p.team] += p.points;
-                if (!teamMembers[p.team]) teamMembers[p.team] = new Set();
-                teamMembers[p.team].add(p.user_name);
-            });
-
-            let plotData = Object.entries(userTotals).map(([user, info]) => ({
-                x: [info.team], y: [info.total], name: user, type: 'bar', text: [String(info.total)], textposition: 'auto',
-                marker: { color: userColors[user] || '#999' }
-            }));
-
-            // Zwingt Plotly dazu, DEIN Team immer links (Index 0) anzuzeigen
-            const orderedTeams = [myTeam, otherTeam];
-
-            if(plotData.length === 0) {
-                document.getElementById('chart-div').innerHTML = "<p style='text-align:center; color:#888; margin-top:50px;'>Noch keine Punkte in diesem Zyklus!</p>";
-                document.getElementById('team-totals-area').innerHTML = "";
-            } else {
-                Plotly.newPlot('chart-div', plotData, { 
-                    barmode: 'stack', margin: { t: 10, l: 30, r: 20, b: 30 }, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', showlegend: false,
-                    xaxis: { categoryorder: 'array', categoryarray: orderedTeams } // Sortierung anwenden
-                }, { displayModeBar: false, responsive: true, staticPlot: true });
-                
-                // Boxen in der gleichen Reihenfolge zeichnen (Dein Team zuerst)
-                document.getElementById('team-totals-area').innerHTML = orderedTeams.map(teamName => {
-                    let legendHtml = Array.from(teamMembers[teamName] || []).map(user => {
-                        const color = userColors[user] || '#999';
-                        return `<span style="white-space: nowrap;"><span style="color:${color}; font-size:14px;">●</span> ${user}</span>`;
-                    }).join('<br>');
-                    
-                    return `
-                    <div class="team-total-box">
-                        <div class="team-total-name">Team ${teamName}</div>
-                        <div class="team-total-score">${teamScores[teamName]} Pkt</div>
-                        <div class="team-legend">${legendHtml}</div>
-                    </div>`;
-                }).join('');
-            }
-        }
-
-        // ==========================================
-        // RÜCKBLICK (Letzte 5 Zyklen)
-        // ==========================================
-        function loadRueckblick() {
-            const container = document.getElementById('rueckblick-container');
-            const baseDate = new Date('2024-01-01T00:00:00Z');
-            const today = new Date();
-            const cycleNum = Math.floor((today - baseDate) / (1000 * 60 * 60 * 24) / 14);
-
-            let html = '';
-            const allKnownTeams = [...new Set(allPointsCache.map(p => p.team))];
-            let myTeam = currentUser.team;
-            let otherTeamFallback = allKnownTeams.find(t => t !== myTeam) || (myTeam === 'LiSa' ? 'SaNi' : 'LiSa');
-
-            for (let i = 1; i <= 5; i++) {
-                const pastCycleNum = cycleNum - i;
-                if (pastCycleNum < 0) break; 
-
-                const startDate = new Date(baseDate.getTime() + (pastCycleNum * 14) * 24 * 60 * 60 * 1000);
-                const endDate = new Date(startDate.getTime() + 13 * 24 * 60 * 60 * 1000);
-
-                const cyclePoints = allPointsCache.filter(p => {
-                    const pDate = new Date(p.timestamp);
-                    return pDate >= startDate && pDate <= new Date(endDate.getTime() + 24*60*60*1000);
-                });
-
-                let scores = {};
-                cyclePoints.forEach(p => {
-                    if (!scores[p.team]) scores[p.team] = 0;
-                    scores[p.team] += p.points;
-                });
-
-                const myScore = scores[myTeam] || 0;
-                let otherTeam = Object.keys(scores).find(t => t !== myTeam) || otherTeamFallback;
-                const otherScore = scores[otherTeam] || 0;
-
-                let resultBg = '#f1f3f4'; let resultBorder = '#9aa0a6'; let resultText = '🤝 Unentschieden';
-                if (myScore > otherScore) {
-                    resultBg = '#e6f4ea'; resultBorder = '#34a853'; resultText = '🏆 Gewonnen';
-                } else if (myScore < otherScore) {
-                    resultBg = '#fce8e6'; resultBorder = '#ea4335'; resultText = '❌ Verloren';
-                }
-
-                const kwStart = getISOWeekNumber(startDate);
-                const kwEnd = getISOWeekNumber(endDate);
-                
-                html += `
-                    <div style="background: ${resultBg}; border-left: 5px solid ${resultBorder}; padding: 15px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                        <div style="font-size: 12px; color: #555; margin-bottom: 8px;">KW: ${kwStart}/${kwEnd}; ${startDate.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })} - ${endDate.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}</div>
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div><strong style="font-size: 16px;">${resultText}</strong></div>
-                            <div style="text-align: right; font-size: 14px;">
-                                <strong>Team ${myTeam}: ${myScore} Pkt</strong><br>
-                                <span style="color:#666;">Team ${otherTeam}: ${otherScore} Pkt</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-
-            if (html === '') html = '<i>Noch nicht genug alte Zyklen vorhanden.</i>';
-            container.innerHTML = html;
-        }
+        async function deleteTask(id) { if(confirm("Löschen?")) { await supabaseClient.from('wg_tasks').delete().eq('id', id); loadAdminTasks(); loadTasksAccordion(); } }
     </script>
 </body>
 </html>
