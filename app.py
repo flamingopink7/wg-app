@@ -443,7 +443,7 @@ if active_tab == "Stand":
 # TAB 2: PUNKTE EINTRAGEN
 elif active_tab == "Punkte":
     current_tasks = load_config_gs()
-    cat_order = ["Quick", "Wartung", "Main", "Strafaufgaben"]
+    cat_order = ["Quick-Wins", "Core-Tasks", "Deep-Clean"]
     
     for cat in cat_order:
         with st.expander(f"📍 {cat}", expanded=False):
@@ -511,7 +511,7 @@ elif active_tab == "Verlauf":
 # TAB 4: ADMIN BEREICH
 elif active_tab == "Admin" and st.session_state.is_admin:
     st.subheader("Aufgaben editieren")
-    cat_order = ["Quick", "Wartung", "Main", "Strafaufgaben"]
+    cat_order = ["Quick-Wins", "Core-Tasks", "Deep-Clean"]
     
     if st.session_state.get("clear_admin_inputs", False):
         for cat in cat_order:
