@@ -5,14 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 <title>WG App</title>
 <link rel="manifest" href="./manifest.json" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.31.0/build/stlite.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.63.1/build/stlite.css" />
 </head>
 <body>
 <div id="root"></div>
-<script src="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.31.0/build/stlite.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.63.1/build/stlite.js"></script>
 <script>
 stlite.mount({
-// HIER WURDE DER PAKETNAME KORRIGIERT:
 requirements: ["pandas", "plotly", "st-gsheets-connection"],
 entrypoint: "app.py",
 files: {
