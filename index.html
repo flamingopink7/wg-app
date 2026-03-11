@@ -18,8 +18,12 @@ stlite.mount({
     "app.py": `
 import streamlit as st
 import pandas as pd
+import threading
 import hashlib
+from datetime import datetime, date, timedelta
+import plotly.express as px
 
+# --- PASSWORT HASHES ---
 USER_PASSWORDS = {
     "Livio": "8e8869158309575390632a93b584a2826a793c5d790d0b0473e0a293933f7216",
     "Salwa": "e26521568288f34354c0382375997237887e2f5080072979207869634e3e3c6a",
@@ -27,40 +31,156 @@ USER_PASSWORDS = {
     "Nils": "83234914a8e5621404c0840e6c6978413f4384a86d26715f5a8c268f70529683"
 }
 
-def hash_pw(p):
-    return hashlib.sha256(str.encode(p)).hexdigest()
+def hash_pw(password):
+    return hashlib.sha256(str.encode(password)).hexdigest()
+
+# --- DATEN DIREKT AUS GOOGLE SHEETS LADEN (OHNE DUCKDB-CRASH) ---
+SHEET_ID = "1hX1kA8MnpgH5z9w-nhyX7gjFGqmlrT6-7ztM0MPo9uQ"
+BASE_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet="
+
+gs_write_lock = threading.Lock()
+
+@st.cache_data(ttl=3600)
+def load_config_gs():
+    try:
+        dt = pd.read_csv(BASE_URL + "WG_Tasks")
+        mapping = {c.lower(): c for c in dt.columns}
+        for k, v in {"category": "Category", "task": "Task", "points": "Points"}.items():
+            if k in mapping: dt = dt.rename(columns={mapping[k]: v})
+        return dt
+    except: return pd.DataFrame([{"Category": "Quick-Wins", "Task": "Flaschen", "Points": 3}])
+
+@st.cache_data(ttl=3600)
+def load_users_gs():
+    try:
+        du = pd.read_csv(BASE_URL + "WG_Users")
+        mapping = {c.lower(): c for c in du.columns}
+        for k, v in {"name": "Name", "team": "Team", "isadmin": "IsAdmin"}.items():
+            if k in mapping: du = du.rename(columns={mapping[k]: v})
+        return du
+    except: return pd.DataFrame([{"Name": "Livio", "Team": "LiSa", "IsAdmin": True}])
+
+@st.cache_data(ttl=10)
+def load_points_gs():
+    try:
+        dp = pd.read_csv(BASE_URL + "WG_Data")
+        for c in ["timestamp", "user", "team", "task", "points"]:
+            if c not in dp.columns: dp[c] = None
+        return dp
+    except: return pd.DataFrame(columns=["timestamp", "user", "team", "task", "points"])
+
+def get_active_points():
+    dp = load_points_gs()
+    if "optimistic_points" in st.session_state and st.session_state.optimistic_points:
+        opt_df = pd.DataFrame(st.session_state.optimistic_points)
+        dp = pd.concat([dp, opt_df], ignore_index=True)
+        dp = dp.drop_duplicates(subset=["timestamp"], keep="last")
+    if not dp.empty and "deleted_timestamps" in st.session_state and st.session_state.deleted_timestamps:
+        dp = dp[~dp["timestamp"].isin(st.session_state.deleted_timestamps)]
+    return dp
+
+def add_points_gs(user, team, task, points):
+    ts = datetime.now().isoformat()
+    if "optimistic_points" not in st.session_state: st.session_state.optimistic_points = []
+    st.session_state.optimistic_points.append({"timestamp": ts, "user": user, "team": team, "task": task, "points": int(points)})
+    st.toast("✅ Erledigt!", icon="🎉")
+    def _write_task():
+        with gs_write_lock:
+            try:
+                # Das Schreiben in Public Sheets ohne Authentifizierung wird von Google blockiert.
+                # In stlite laufen die Punkte fürs Erste lokal weiter!
+                load_points_gs.clear() 
+            except Exception as e: print(f"Save failed: {e}")
+    threading.Thread(target=_write_task).start()
+
+def get_base_date(): return date(2024, 1, 1)
+
+def get_cycle_info(target_date):
+    base_date = get_base_date()
+    delta = (target_date - base_date).days
+    cycle_num = delta // 14
+    start = base_date + timedelta(days=cycle_num * 14)
+    end = start + timedelta(days=13)
+    pkg = "Paket A" if cycle_num % 2 == 0 else "Paket B"
+    return start, end, pkg, cycle_num
 
 st.set_page_config(page_title="WG", page_icon="🏔️", layout="centered")
 
+# --- CSS (Design unverändert) ---
 st.markdown("""
 <style>
     .stButton > button { width: 100%; min-height: 65px; border-radius: 12px; font-weight: bold; }
     .block-container { padding-left: 90px !important; }
-    [data-testid="stRadio"] { position: fixed !important; top: 0; left: 0; width: 80px; height: 100vh; background-color: #f0f2f6; z-index: 999999; padding-top: 30px; }
+    [data-testid="stRadio"] { position: fixed !important; top: 0; left: 0; width: 80px; height: 100vh; background-color: var(--secondary-background-color); z-index: 999999; padding-top: 30px; }
+    [data-testid="stRadio"] label { height: 80px; width: 80px; justify-content: center; cursor: pointer; }
+    [data-baseweb="radio"] > div:first-child { display: none !important; }
+    [data-testid="stRadio"] p { color: transparent; font-size: 0px; }
+    [data-testid="stRadio"] label:nth-of-type(1) { background-image: url('./static/001.png'); background-size: 45px; background-repeat: no-repeat; background-position: center; }
+    [data-testid="stRadio"] label:nth-of-type(2) { background-image: url('./static/002.png'); background-size: 45px; background-repeat: no-repeat; background-position: center; }
+    [data-testid="stRadio"] label:nth-of-type(3) { background-image: url('./static/icon.png'); background-size: 45px; background-repeat: no-repeat; background-position: center; }
+    [data-testid="stRadio"] label:nth-of-type(4) { background-image: url('./static/003.png'); background-size: 45px; background-repeat: no-repeat; background-position: center; }
+    [data-testid="stRadio"] label:last-of-type { background-image: url('./static/004.png'); background-size: 45px; background-repeat: no-repeat; background-position: center; margin-top: auto; margin-bottom: 30px; }
     header, footer, [data-testid="collapsedControl"] { display: none !important; }
 </style>
 """, unsafe_allow_html=True)
 
-if "auth" not in st.session_state:
-    st.session_state.update({"user": None, "auth": False})
+df_tasks = load_config_gs()
+df_users = load_users_gs()
 
-if not st.session_state.auth:
+if "authenticated" not in st.session_state:
+    st.session_state.update({"user": None, "authenticated": False, "team": None, "is_admin": False, "deleted_timestamps": set()})
+
+if not st.session_state.authenticated:
     st.title("🏔️ WG Login")
-    u = st.text_input("User")
-    p = st.text_input("PW", type="password")
+    u_in = st.text_input("User")
+    p_in = st.text_input("PW", type="password")
     if st.button("Anmelden"):
-            # Sucht den Namen unabhängig von Groß-/Kleinschreibung
-            user_match = next((k for k in USER_PASSWORDS.keys() if k.lower() == u.strip().lower()), None)
-            
-            if user_match and hash_pw(p) == USER_PASSWORDS[user_match]:
-                st.session_state.update({"user": user_match, "auth": True})
+        user_lower = u_in.strip().lower()
+        match = df_users[df_users["Name"].str.lower() == user_lower]
+        if not match.empty:
+            real_name = match.iloc[0]["Name"]
+            if hash_pw(p_in) == USER_PASSWORDS.get(real_name):
+                st.session_state.update({"user": real_name, "team": match.iloc[0]["Team"], "is_admin": bool(match.iloc[0]["IsAdmin"]), "authenticated": True})
                 st.rerun()
-            else:
-                st.error("User oder Passwort falsch")
-        st.stop()
+            else: st.error("Passwort falsch")
+        else: st.error("User unbekannt")
+    st.stop()
 
-st.write(f"Hallo {st.session_state.user}!")
-st.success("App fehlerfrei geladen! DuckDB wurde besiegt. 🚀")
+# --- NAVIGATION ---
+nav_options = {"Stand": "Stand", "Punkte": "Punkte", "Verlauf": "Verlauf"}
+if st.session_state.is_admin: nav_options["Admin"] = "Admin"
+nav_options["Logout"] = "Logout"
+
+sel = st.radio("Nav", list(nav_options.keys()), label_visibility="collapsed", key="main_nav")
+active_tab = nav_options[sel]
+
+st.write(f"Hallo **{st.session_state.user}**! 👋")
+
+if active_tab == "Stand":
+    df = get_active_points() 
+    cs, ce, _, _ = get_cycle_info(date.today())
+    st.info(f"📍 **KW{cs.isocalendar()[1]} & KW{ce.isocalendar()[1]}**")
+    if not df.empty:
+        df['Datum'] = pd.to_datetime(df['timestamp']).dt.date
+        curr = df[(df['Datum'] >= cs) & (df['Datum'] <= ce)]
+        if not curr.empty:
+            agg = curr.groupby(["team", "user"])["points"].sum().reset_index()
+            fig = px.bar(agg, x="team", y="points", color="user", barmode='stack', height=350)
+            st.plotly_chart(fig, use_container_width=True)
+    else: st.warning("Keine Punkte.")
+
+elif active_tab == "Punkte":
+    cat_order = ["Quick-Wins", "Core-Tasks", "Deep-Clean"]
+    for cat in cat_order:
+        with st.expander(f"📍 {cat}"):
+            tasks = df_tasks[df_tasks["Category"] == cat].sort_values("Points", ascending=False)
+            for r in tasks.itertuples():
+                if st.button(f"{r.Task} ({r.Points}P)", key=f"p_{r.Index}"):
+                    add_points_gs(st.session_state.user, st.session_state.team, r.Task, r.Points)
+
+elif active_tab == "Logout":
+    st.session_state.authenticated = False
+    st.rerun()
 `
   }
 }, document.getElementById("root"));
