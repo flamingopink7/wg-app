@@ -87,8 +87,20 @@
                 document.getElementById('welcome-text').innerText = `Hallo ${data.name}! 👋`;
                 errorMsg.style.display = 'none';
             } else {
-                // Login fehlgeschlagen!
+                // SPIONAGE-MODUS: Genauer Fehlertext
+                let fehlerText = "";
+                if (!data) {
+                    fehlerText = `User '${userIn}' wurde in der Datenbank nicht gefunden! (Vielleicht ein Tippfehler?)`;
+                } else {
+                    fehlerText = `Passwort falsch!\n\nDein eingegebenes Passwort erzeugt diesen Hash:\n${hashedPass}\n\nIn der Datenbank steht aber:\n${data.password_hash}`;
+                }
+                
+                errorMsg.innerText = fehlerText;
                 errorMsg.style.display = 'block';
+                // Macht das Textfeld etwas größer für den langen Text
+                errorMsg.style.whiteSpace = "pre-wrap"; 
+                errorMsg.style.fontSize = "12px";
+                errorMsg.style.textAlign = "left";
             }
         }
 
