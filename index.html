@@ -8,34 +8,32 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; connect-src 'self' https://cdn.jsdelivr.net https://*.google.com https://*.googleapis.com https://*.gstatic.com; worker-src 'self' blob:; img-src 'self' data: https://cdn.jsdelivr.net https://flamingopink7.github.io;">
 
     <link rel="manifest" href="./manifest.json" />
-    <link rel="apple-touch-icon" href="./static/icon.png" />
-    <link rel="icon" href="./static/icon.png" />
+    <link rel="icon" href="icon.png" />
+    <link rel="apple-touch-icon" href="icon.png" />
     
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.63.1/build/stlite.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.31.0/build/stlite.css" />
   </head>
   <body>
     <div id="root"></div>
-    <script src="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.63.1/build/stlite.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.31.0/build/stlite.js"></script>
     <script>
-      // FIX für "Not same-origin": Wir mounten die App erst, wenn der Browser bereit ist
-      window.addEventListener("load", function() {
-        stlite.mount({
-          requirements: ["pandas", "plotly", "streamlit-gsheets"],
-          entrypoint: "app.py",
-          files: {
-            ".streamlit/secrets.toml": `
+      stlite.mount({
+        requirements: ["pandas", "plotly", "streamlit-gsheets"],
+        entrypoint: "app.py",
+        files: {
+          ".streamlit/secrets.toml": `
 [connections.gsheets]
 spreadsheet = "https://docs.google.com/spreadsheets/d/1hX1kA8MnpgH5z9w-nhyX7gjFGqmlrT6-7ztM0MPo9uQ/edit?usp=sharing"
 `,
-            "app.py": `
+          "app.py": `
 import streamlit as st
 import pandas as pd
-import threading
 import hashlib
 from datetime import datetime, date, timedelta
 import plotly.express as px
 from streamlit_gsheets import GSheetsConnection
 
+# Einfaches Passwort-System (Hashes)
 USER_PASSWORDS = {
     "Livio": "8e8869158309575390632a93b584a2826a793c5d790d0b0473e0a293933f7216",
     "Salwa": "e26521568288f34354c0382375997237887e2f5080072979207869634e3e3c6a",
@@ -46,40 +44,15 @@ USER_PASSWORDS = {
 def hash_pw(password):
     return hashlib.sha256(str.encode(password)).hexdigest()
 
-conn = st.connection("gsheets", type=GSheetsConnection)
-gs_write_lock = threading.Lock()
-
-@st.cache_data(ttl=3600)
-def load_config_gs():
-    try:
-        dt = conn.read(worksheet="WG_Tasks", ttl=0)
-        mapping = {c.lower(): c for c in dt.columns}
-        for k, v in {"category": "Category", "task": "Task", "points": "Points"}.items():
-            if k in mapping: dt = dt.rename(columns={mapping[k]: v})
-        return dt
-    except: return pd.DataFrame([{"Category": "Quick-Wins", "Task": "Flaschen", "Points": 3}])
-
-@st.cache_data(ttl=3600)
-def load_users_gs():
-    try:
-        du = conn.read(worksheet="WG_Users", ttl=0)
-        mapping = {c.lower(): c for c in du.columns}
-        for k, v in {"name": "Name", "team": "Team", "isadmin": "IsAdmin"}.items():
-            if k in mapping: du = du.rename(columns={mapping[k]: v})
-        return du
-    except: return pd.DataFrame([{"Name": "Livio", "Team": "LiSa", "IsAdmin": True}])
-
-@st.cache_data(ttl=10)
-def load_points_gs():
-    try:
-        dp = conn.read(worksheet="WG_Data", ttl=0)
-        for c in ["timestamp", "user", "team", "task", "points"]:
-            if c not in dp.columns: dp[c] = None
-        return dp
-    except: return pd.DataFrame(columns=["timestamp", "user", "team", "task", "points"])
+# Verbindung herstellen
+try:
+    conn = st.connection("gsheets", type=GSheetsConnection)
+except:
+    st.error("Verbindung zu Google fehlgeschlagen.")
 
 st.set_page_config(page_title="WG", page_icon="🏔️", layout="centered")
 
+# CSS für die Sidebar-Icons
 st.markdown("""
 <style>
     .stButton > button { width: 100%; min-height: 65px; border-radius: 12px; font-weight: bold; }
@@ -91,6 +64,8 @@ st.markdown("""
     [data-testid="stRadio"] label { height: 80px; width: 80px; justify-content: center; cursor: pointer; }
     [data-baseweb="radio"] > div:first-child { display: none !important; }
     [data-testid="stRadio"] p { color: transparent; font-size: 0px; }
+    
+    /* Icons - wir nutzen hier Pfade, die stlite im virtuellen Dateisystem findet */
     [data-testid="stRadio"] label:nth-of-type(1) { background-image: url('static/001.png'); background-size: 45px; background-repeat: no-repeat; background-position: center; }
     [data-testid="stRadio"] label:nth-of-type(2) { background-image: url('static/002.png'); background-size: 45px; background-repeat: no-repeat; background-position: center; }
     [data-testid="stRadio"] label:nth-of-type(3) { background-image: url('static/icon.png'); background-size: 45px; background-repeat: no-repeat; background-position: center; }
@@ -101,36 +76,35 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 if "authenticated" not in st.session_state:
-    st.session_state.update({"user": None, "authenticated": False, "team": None, "is_admin": False})
+    st.session_state.update({"user": None, "authenticated": False})
 
 if not st.session_state.authenticated:
-    st.title("Login")
+    st.title("🏔️ WG Login")
     u_in = st.text_input("User")
-    p_in = st.text_input("PW", type="password")
+    p_in = st.text_input("Passwort", type="password")
     if st.button("Anmelden"):
         user_lower = u_in.strip().lower()
-        match = load_users_gs()
-        match = match[match["Name"].str.lower() == user_lower]
-        if not match.empty:
-            real_name = match.iloc[0]["Name"]
+        if user_lower in [u.lower() for u in USER_PASSWORDS.keys()]:
+            # Suche den korrekten Namen für den Key
+            real_name = [u for u in USER_PASSWORDS.keys() if u.lower() == user_lower][0]
             if hash_pw(p_in) == USER_PASSWORDS.get(real_name):
-                st.session_state.update({"user": real_name, "team": match.iloc[0]["Team"], "is_admin": bool(match.iloc[0]["IsAdmin"]), "authenticated": True})
+                st.session_state.update({"user": real_name, "authenticated": True})
                 st.rerun()
             else: st.error("Passwort falsch")
         else: st.error("User unbekannt")
     st.stop()
 
-st.write(f"Hallo {st.session_state.user}!")
-st.info("PWA erfolgreich geladen!")
-`,
-            "static/001.png": { url: "./static/001.png" },
-            "static/002.png": { url: "./static/002.png" },
-            "static/003.png": { url: "./static/003.png" },
-            "static/004.png": { url: "./static/004.png" },
-            "static/icon.png": { url: "./static/icon.png" }
-          }
-        }, document.getElementById("root"));
-      });
+st.write(f"Hallo {st.session_state.user}! 🏔️")
+st.success("App erfolgreich geladen!")
+""",
+          # WICHTIG: Hier laden wir deine Bilder in den virtuellen Ordner 'static'
+          "static/001.png": { url: "static/001.png" },
+          "static/002.png": { url: "static/002.png" },
+          "static/003.png": { url: "static/003.png" },
+          "static/004.png": { url: "static/004.png" },
+          "static/icon.png": { url: "static/icon.png" }
+        }
+      }, document.getElementById("root"));
     </script>
   </body>
 </html>
