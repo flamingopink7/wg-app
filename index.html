@@ -12,20 +12,14 @@
 <script src="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.58.0/build/stlite.js"></script>
 <script>
 stlite.mount({
-requirements: ["pandas", "plotly", "st-gsheets-connection"],
+// HIER IST DER MAGISCHE MOMENT: Wir brauchen nur noch pandas und plotly!
+requirements: ["pandas", "plotly"],
 entrypoint: "app.py",
 files: {
-".streamlit/secrets.toml": `
-[connections.gsheets]
-spreadsheet = "https://docs.google.com/spreadsheets/d/1hX1kA8MnpgH5z9w-nhyX7gjFGqmlrT6-7ztM0MPo9uQ/edit?usp=sharing"
-`,
 "app.py": `
 import streamlit as st
 import pandas as pd
 import hashlib
-from datetime import datetime, date, timedelta
-import plotly.express as px
-from streamlit_gsheets import GSheetsConnection
 
 USER_PASSWORDS = {
     "Livio": "8e8869158309575390632a93b584a2826a793c5d790d0b0473e0a293933f7216",
@@ -37,7 +31,6 @@ USER_PASSWORDS = {
 def hash_pw(p):
     return hashlib.sha256(str.encode(p)).hexdigest()
 
-conn = st.connection("gsheets", type=GSheetsConnection)
 st.set_page_config(page_title="WG", page_icon="🏔️", layout="centered")
 
 st.markdown("""
@@ -65,7 +58,12 @@ if not st.session_state.auth:
     st.stop()
 
 st.write(f"Hallo {st.session_state.user}!")
-st.success("App erfolgreich geladen!")
+st.success("App fehlerfrei geladen! DuckDB wurde besiegt. 🚀")
+
+# Beispiel: So laden wir künftig die Sheets ohne st-gsheets-connection
+# url = "https://docs.google.com/spreadsheets/d/1hX1kA8MnpgH5z9w-nhyX7gjFGqmlrT6-7ztM0MPo9uQ/gviz/tq?tqx=out:csv&sheet=WG_Tasks"
+# df = pd.read_csv(url)
+# st.dataframe(df)
 `
 }
 }, document.getElementById("root"));
