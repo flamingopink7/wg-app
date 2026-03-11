@@ -11,50 +11,86 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        body { font-family: sans-serif; background-color: #f0f2f6; margin: 0; padding: 20px; color: #31333F; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); width: 100%; max-width: 400px; }
-        h1 { text-align: center; margin-top: 0; }
-        label { font-size: 14px; font-weight: bold; margin-bottom: 5px; display: block; }
+        body { font-family: sans-serif; background-color: #f0f2f6; margin: 0; color: #31333F; height: 100vh; overflow: hidden; }
+        
+        /* Login Screen Setup */
+        #login-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; padding: 20px; }
+        .login-box { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); width: 100%; max-width: 400px; }
         input { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-        button { width: 100%; min-height: 50px; background-color: #FF4B4B; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
-        button:hover { background-color: #ff3333; }
-        .error { color: red; text-align: center; margin-top: 15px; display: none; font-weight: bold; }
+        .btn-primary { width: 100%; min-height: 50px; background-color: #FF4B4B; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
+        
+        /* Main App Setup */
+        #app-screen { display: none; height: 100vh; flex-direction: row; }
+        
+        /* Sidebar (ersetzt dein stRadio) */
+        .sidebar { width: 80px; background-color: #e0e2e6; display: flex; flex-direction: column; align-items: center; padding-top: 30px; }
+        .nav-btn { width: 60px; height: 60px; border-radius: 12px; border: none; background: transparent; font-size: 24px; cursor: pointer; margin-bottom: 15px; display: flex; justify-content: center; align-items: center; }
+        .nav-btn.active { background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .nav-btn.logout { margin-top: auto; margin-bottom: 30px; }
+        
+        /* Content Area */
+        .content { flex-grow: 1; padding: 30px; overflow-y: auto; }
+        
+        /* Task Buttons (ersetzt st.button) */
+        .category-title { background-color: white; padding: 15px; border-radius: 10px; margin-top: 20px; margin-bottom: 10px; font-weight: bold; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .task-btn { width: 100%; min-height: 65px; border-radius: 12px; font-weight: bold; font-size: 15px; background: white; border: 1px solid #ddd; margin-bottom: 8px; text-align: left; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; }
+        .task-btn:active { background-color: #f0f2f6; transform: scale(0.98); }
+        
+        /* Toast Notification (ersetzt st.toast) */
+        #toast { position: fixed; bottom: -50px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 24px; border-radius: 30px; font-weight: bold; transition: bottom 0.3s; z-index: 1000; }
     </style>
 </head>
 <body>
 
-    <div class="container" id="login-screen">
-        <h1>🏔️ WG Login</h1>
-        <label>User</label>
-        <input type="text" id="username" placeholder="Livio">
-        
-        <label>PW</label>
-        <input type="password" id="password" placeholder="Passwort">
-        
-        <button onclick="login()">Anmelden</button>
-        <div class="error" id="error-msg">User oder Passwort falsch!</div>
+    <div id="login-screen">
+        <div class="login-box">
+            <h1 style="text-align: center; margin-top: 0;">🏔️ WG Login</h1>
+            <label style="font-weight:bold; font-size: 14px;">User</label>
+            <input type="text" id="username" placeholder="Livio">
+            <label style="font-weight:bold; font-size: 14px;">PW</label>
+            <input type="password" id="password" placeholder="Passwort">
+            <button class="btn-primary" onclick="login()">Anmelden</button>
+            <div id="error-msg" style="color: red; text-align: center; margin-top: 15px; display: none; font-weight: bold;">Passwort falsch!</div>
+        </div>
     </div>
 
-    <div class="container" id="app-screen" style="display: none;">
-        <h1 id="welcome-text"></h1>
-        <p style="text-align: center;">✅ Mit Supabase verbunden!</p>
-        <button onclick="logout()">Logout</button>
+    <div id="app-screen">
+        <div class="sidebar">
+            <button class="nav-btn" id="nav-stand" onclick="switchTab('stand')">📊</button>
+            <button class="nav-btn active" id="nav-punkte" onclick="switchTab('punkte')">✅</button>
+            <button class="nav-btn logout" onclick="logout()">🚪</button>
+        </div>
+
+        <div class="content">
+            <h2 id="welcome-text" style="margin-top:0;">Hallo! 👋</h2>
+            
+            <div id="tab-stand" style="display: none;">
+                <p>Hier bauen wir im nächsten Schritt das Balkendiagramm (Plotly) ein! 🚧</p>
+            </div>
+            
+            <div id="tab-punkte">
+                <div id="tasks-container">
+                    <i>Lade Aufgaben aus der Datenbank...</i>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <div id="toast">✅ Punkte gespeichert!</div>
 
     <script>
         // ==========================================
-        // 1. HIER DEINE SUPABASE KEYS EINTRAGEN!
+        // 1. SUPABASE KEYS (Wieder einfügen!)
         // ==========================================
-        const SUPABASE_URL = 'https://ckghuvwtafygmlxaylyi.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_AvT0AGUjHlmgWlrIZDD3Ng_JliBmjY-';
-        
-        // HIER WURDE DER NAME GEÄNDERT:
+        const SUPABASE_URL = 'DEINE_URL_HIER';
+        const SUPABASE_KEY = 'DEIN_KEY_HIER';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        let currentUser = null; // Speichert den eingeloggten User
+
         // ==========================================
-        // 2. LOGIK FÜRS LOGIN
+        // 2. LOGIN LOGIK
         // ==========================================
-        
         async function hashPassword(password) {
             const encoder = new TextEncoder();
             const data = encoder.encode(password);
@@ -65,50 +101,94 @@
         async function login() {
             const userIn = document.getElementById('username').value.trim();
             const passIn = document.getElementById('password').value;
-            const errorMsg = document.getElementById('error-msg');
-            
             if (!userIn || !passIn) return;
 
-            // Passwort hashen
             const hashedPass = await hashPassword(passIn);
+            const { data, error } = await supabaseClient.from('wg_users').select('*').ilike('name', userIn).single();
 
-            // In Supabase nach dem User suchen
-            const { data, error } = await supabaseClient
-                .from('wg_users')
-                .select('*')
-                .ilike('name', userIn)
-                .single();
-
-            // Prüfen ob Passwort stimmt
             if (data && data.password_hash === hashedPass) {
-                // Login erfolgreich!
+                currentUser = data; // User speichern
                 document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('app-screen').style.display = 'block';
-                document.getElementById('welcome-text').innerText = `Hallo ${data.name}! 👋`;
-                errorMsg.style.display = 'none';
-            } else {
-                // SPIONAGE-MODUS: Genauer Fehlertext
-                let fehlerText = "";
-                if (!data) {
-                    fehlerText = `User '${userIn}' wurde in der Datenbank nicht gefunden! (Vielleicht ein Tippfehler?)`;
-                } else {
-                    fehlerText = `Passwort falsch!\n\nDein eingegebenes Passwort erzeugt diesen Hash:\n${hashedPass}\n\nIn der Datenbank steht aber:\n${data.password_hash}`;
-                }
+                document.getElementById('app-screen').style.display = 'flex';
+                document.getElementById('welcome-text').innerText = `Hallo ${currentUser.name}! 👋`;
                 
-                errorMsg.innerText = fehlerText;
-                errorMsg.style.display = 'block';
-                // Macht das Textfeld etwas größer für den langen Text
-                errorMsg.style.whiteSpace = "pre-wrap"; 
-                errorMsg.style.fontSize = "12px";
-                errorMsg.style.textAlign = "left";
+                // Sobald eingeloggt, Aufgaben aus DB laden!
+                loadTasks();
+            } else {
+                document.getElementById('error-msg').style.display = 'block';
             }
         }
 
         function logout() {
-            document.getElementById('login-screen').style.display = 'block';
+            currentUser = null;
+            document.getElementById('login-screen').style.display = 'flex';
             document.getElementById('app-screen').style.display = 'none';
-            document.getElementById('username').value = '';
             document.getElementById('password').value = '';
+        }
+
+        // ==========================================
+        // 3. NAVIGATION (Tabs wechseln)
+        // ==========================================
+        function switchTab(tabName) {
+            document.getElementById('tab-stand').style.display = tabName === 'stand' ? 'block' : 'none';
+            document.getElementById('tab-punkte').style.display = tabName === 'punkte' ? 'block' : 'none';
+            
+            document.getElementById('nav-stand').classList.toggle('active', tabName === 'stand');
+            document.getElementById('nav-punkte').classList.toggle('active', tabName === 'punkte');
+        }
+
+        // ==========================================
+        // 4. AUFGABEN LADEN & PUNKTE EINTRAGEN
+        // ==========================================
+        async function loadTasks() {
+            const container = document.getElementById('tasks-container');
+            // Holt alle Aufgaben aus Supabase, absteigend sortiert nach Punkten
+            const { data: tasks, error } = await supabaseClient.from('wg_tasks').select('*').order('points', { ascending: false });
+            
+            if (error) { container.innerHTML = `<p style="color:red">Fehler beim Laden: ${error.message}</p>`; return; }
+
+            // Aufgaben nach Kategorie gruppieren
+            const categories = ['Quick-Wins', 'Core-Tasks', 'Deep-Clean'];
+            container.innerHTML = ''; // Lade-Text löschen
+
+            categories.forEach(cat => {
+                const catTasks = tasks.filter(t => t.category === cat);
+                if (catTasks.length > 0) {
+                    // Kategorie-Titel (Expander-Ersatz)
+                    container.innerHTML += `<div class="category-title">📍 ${cat}</div>`;
+                    
+                    // Buttons für jede Aufgabe generieren
+                    catTasks.forEach(task => {
+                        // Wir übergeben den Namen und die Punkte an die Funktion savePoints
+                        const btnHTML = `<button class="task-btn" onclick="savePoints('${task.task}', ${task.points})">
+                                            <span>${task.task}</span>
+                                            <span style="color:#FF4B4B;">${task.points}P</span>
+                                         </button>`;
+                        container.innerHTML += btnHTML;
+                    });
+                }
+            });
+        }
+
+        // Diese Funktion wird aufgerufen, wenn du auf eine Aufgabe klickst!
+        async function savePoints(taskName, points) {
+            const { error } = await supabaseClient.from('wg_points').insert([
+                { 
+                    user_name: currentUser.name, 
+                    team: currentUser.team, 
+                    task: taskName, 
+                    points: points 
+                }
+            ]);
+
+            if (error) {
+                alert("Fehler beim Speichern: " + error.message);
+            } else {
+                // Zeigt ein kurzes "Erfolgreich!" Popup an (wie st.toast)
+                const toast = document.getElementById('toast');
+                toast.style.bottom = '30px';
+                setTimeout(() => { toast.style.bottom = '-50px'; }, 3000);
+            }
         }
     </script>
 </body>
