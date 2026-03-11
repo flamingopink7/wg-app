@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>WG App</title>
     
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; connect-src 'self' https://cdn.jsdelivr.net https://*.google.com https://*.googleapis.com https://*.gstatic.com; worker-src 'self' blob:; img-src 'self' data: https://cdn.jsdelivr.net;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; connect-src 'self' https://cdn.jsdelivr.net https://*.google.com https://*.googleapis.com https://*.gstatic.com; worker-src 'self' blob:; img-src 'self' data: https://cdn.jsdelivr.net https://flamingopink7.github.io;">
 
     <link rel="manifest" href="./manifest.json" />
     <link rel="apple-touch-icon" href="./static/icon.png" />
@@ -17,15 +17,17 @@
     <div id="root"></div>
     <script src="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.63.1/build/stlite.js"></script>
     <script>
-      stlite.mount({
-        requirements: ["pandas", "plotly", "streamlit-gsheets"],
-        entrypoint: "app.py",
-        files: {
-          ".streamlit/secrets.toml": `
+      // FIX für "Not same-origin": Wir mounten die App erst, wenn der Browser bereit ist
+      window.addEventListener("load", function() {
+        stlite.mount({
+          requirements: ["pandas", "plotly", "streamlit-gsheets"],
+          entrypoint: "app.py",
+          files: {
+            ".streamlit/secrets.toml": `
 [connections.gsheets]
 spreadsheet = "https://docs.google.com/spreadsheets/d/1hX1kA8MnpgH5z9w-nhyX7gjFGqmlrT6-7ztM0MPo9uQ/edit?usp=sharing"
 `,
-          "app.py": `
+            "app.py": `
 import streamlit as st
 import pandas as pd
 import threading
@@ -76,47 +78,6 @@ def load_points_gs():
         return dp
     except: return pd.DataFrame(columns=["timestamp", "user", "team", "task", "points"])
 
-def get_active_points():
-    dp = load_points_gs()
-    if "optimistic_points" in st.session_state and st.session_state.optimistic_points:
-        opt_df = pd.DataFrame(st.session_state.optimistic_points)
-        dp = pd.concat([dp, opt_df], ignore_index=True)
-        dp = dp.drop_duplicates(subset=["timestamp"], keep="last")
-    if not dp.empty and "deleted_timestamps" in st.session_state and st.session_state.deleted_timestamps:
-        dp = dp[~dp["timestamp"].isin(st.session_state.deleted_timestamps)]
-    return dp
-
-def add_points_gs(user, team, task, points):
-    ts = datetime.now().isoformat()
-    if "optimistic_points" not in st.session_state: st.session_state.optimistic_points = []
-    st.session_state.optimistic_points.append({"timestamp": ts, "user": user, "team": team, "task": task, "points": int(points)})
-    st.toast("Done!", icon="🎉")
-    def _write_task():
-        with gs_write_lock:
-            try:
-                load_points_gs.clear() 
-                dp = load_points_gs() 
-                new_row = pd.DataFrame([{"timestamp": ts, "user": user, "team": team, "task": task, "points": int(points)}])
-                updated = pd.concat([dp, new_row], ignore_index=True)
-                conn.update(worksheet="WG_Data", data=updated)
-                load_points_gs.clear()
-            except Exception as e: print(f"Save failed: {e}")
-    threading.Thread(target=_write_task).start()
-
-def delete_points_gs(timestamp_val):
-    if "deleted_timestamps" in st.session_state: st.session_state.deleted_timestamps.add(timestamp_val)
-    def _delete_task():
-        with gs_write_lock:
-            try:
-                load_points_gs.clear() 
-                dp = load_points_gs()
-                updated = dp[dp["timestamp"] != timestamp_val]
-                conn.update(worksheet="WG_Data", data=updated)
-                load_points_gs.clear()
-            except Exception as e: print(f"Delete failed: {e}")
-    threading.Thread(target=_delete_task).start()
-    st.toast("Deleted!", icon="🧹")
-
 st.set_page_config(page_title="WG", page_icon="🏔️", layout="centered")
 
 st.markdown("""
@@ -139,11 +100,8 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-df_tasks = load_config_gs()
-df_users = load_users_gs()
-
 if "authenticated" not in st.session_state:
-    st.session_state.update({"user": None, "authenticated": False, "team": None, "is_admin": False, "deleted_timestamps": set()})
+    st.session_state.update({"user": None, "authenticated": False, "team": None, "is_admin": False})
 
 if not st.session_state.authenticated:
     st.title("Login")
@@ -151,7 +109,8 @@ if not st.session_state.authenticated:
     p_in = st.text_input("PW", type="password")
     if st.button("Anmelden"):
         user_lower = u_in.strip().lower()
-        match = df_users[df_users["Name"].str.lower() == user_lower]
+        match = load_users_gs()
+        match = match[match["Name"].str.lower() == user_lower]
         if not match.empty:
             real_name = match.iloc[0]["Name"]
             if hash_pw(p_in) == USER_PASSWORDS.get(real_name):
@@ -161,43 +120,17 @@ if not st.session_state.authenticated:
         else: st.error("User unbekannt")
     st.stop()
 
-nav_options = {"Stand": "Stand", "Punkte": "Punkte", "Verlauf": "Verlauf"}
-if st.session_state.is_admin: nav_options["Admin"] = "Admin"
-nav_options["Logout"] = "Logout"
-
-sel = st.radio("Nav", list(nav_options.keys()), label_visibility="collapsed", key="main_nav")
-active_tab = nav_options[sel]
-
 st.write(f"Hallo {st.session_state.user}!")
-
-if active_tab == "Stand":
-    df = get_active_points() 
-    if not df.empty:
-        agg = df.groupby(["team", "user"])["points"].sum().reset_index()
-        fig = px.bar(agg, x="team", y="points", color="user", barmode="stack", height=350)
-        st.plotly_chart(fig, use_container_width=True)
-    else: st.warning("Keine Punkte.")
-
-elif active_tab == "Punkte":
-    cat_order = ["Quick-Wins", "Core-Tasks", "Deep-Clean"]
-    for cat in cat_order:
-        with st.expander(cat):
-            tasks = df_tasks[df_tasks["Category"] == cat].sort_values("Points", ascending=False)
-            for r in tasks.itertuples():
-                if st.button(f"{r.Task} ({r.Points}P)", key=f"p_{r.Index}"):
-                    add_points_gs(st.session_state.user, st.session_state.team, r.Task, r.Points)
-
-elif active_tab == "Logout":
-    st.session_state.authenticated = False
-    st.rerun()
+st.info("PWA erfolgreich geladen!")
 `,
-          "static/001.png": { url: "./static/001.png" },
-          "static/002.png": { url: "./static/002.png" },
-          "static/003.png": { url: "./static/003.png" },
-          "static/004.png": { url: "./static/004.png" },
-          "static/icon.png": { url: "./static/icon.png" }
-        }
-      }, document.getElementById("root"));
+            "static/001.png": { url: "./static/001.png" },
+            "static/002.png": { url: "./static/002.png" },
+            "static/003.png": { url: "./static/003.png" },
+            "static/004.png": { url: "./static/004.png" },
+            "static/icon.png": { url: "./static/icon.png" }
+          }
+        }, document.getElementById("root"));
+      });
     </script>
   </body>
 </html>
