@@ -1,28 +1,28 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <title>WG App</title>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; connect-src 'self' https://cdn.jsdelivr.net https://*.google.com https://*.googleapis.com https://*.gstatic.com; worker-src 'self' blob: https://cdn.jsdelivr.net; img-src 'self' data: https://cdn.jsdelivr.net https://flamingopink7.github.io;">
-    <link rel="manifest" href="./manifest.json" />
-    <link rel="icon" href="./static/icon.png" />
-    <link rel="apple-touch-icon" href="./static/icon.png" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.31.0/build/stlite.css" />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script src="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.31.0/build/stlite.js"></script>
-    <script>
-      stlite.mount({
-        requirements: ["pandas", "plotly", "streamlit-gsheets"],
-        entrypoint: "app.py",
-        files: {
-          ".streamlit/secrets.toml": `
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+<title>WG App</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; connect-src 'self' https://cdn.jsdelivr.net https://*.google.com https://*.googleapis.com https://*.gstatic.com; worker-src 'self' blob: https://cdn.jsdelivr.net; img-src 'self' data: https://cdn.jsdelivr.net https://flamingopink7.github.io;">
+<link rel="manifest" href="./manifest.json" />
+<link rel="icon" href="./static/icon.png" />
+<link rel="apple-touch-icon" href="./static/icon.png" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.31.0/build/stlite.css" />
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.31.0/build/stlite.js"></script>
+<script>
+stlite.mount({
+requirements: ["pandas", "plotly", "streamlit-gsheets"],
+entrypoint: "app.py",
+files: {
+".streamlit/secrets.toml": `
 [connections.gsheets]
 spreadsheet = "https://docs.google.com/spreadsheets/d/1hX1kA8MnpgH5z9w-nhyX7gjFGqmlrT6-7ztM0MPo9uQ/edit?usp=sharing"
 `,
-          "app.py": `
+"app.py": `
 import streamlit as st
 import pandas as pd
 import hashlib
@@ -41,17 +41,13 @@ def hash_pw(p):
     return hashlib.sha256(str.encode(p)).hexdigest()
 
 conn = st.connection("gsheets", type=GSheetsConnection)
-
 st.set_page_config(page_title="WG", page_icon="🏔️", layout="centered")
 
 st.markdown("""
 <style>
     .stButton > button { width: 100%; min-height: 65px; border-radius: 12px; font-weight: bold; }
     .block-container { padding-left: 90px !important; }
-    [data-testid="stRadio"] { 
-        position: fixed !important; top: 0; left: 0; width: 80px; height: 100vh; 
-        background-color: #f0f2f6; z-index: 999999; padding-top: 30px;
-    }
+    [data-testid="stRadio"] { position: fixed !important; top: 0; left: 0; width: 80px; height: 100vh; background-color: #f0f2f6; z-index: 999999; padding-top: 30px; }
     [data-testid="stRadio"] label { height: 80px; width: 80px; justify-content: center; cursor: pointer; }
     [data-baseweb="radio"] > div:first-child { display: none !important; }
     [data-testid="stRadio"] p { color: transparent; font-size: 0px; }
@@ -82,13 +78,13 @@ if not st.session_state.auth:
 st.write(f"Hallo {st.session_state.user}!")
 st.success("App geladen")
 `,
-          "static/001.png": { url: "static/001.png" },
-          "static/002.png": { url: "static/002.png" },
-          "static/003.png": { url: "static/003.png" },
-          "static/004.png": { url: "static/004.png" },
-          "static/icon.png": { url: "static/icon.png" }
-        }
-      }, document.getElementById("root"));
-    </script>
-  </body>
+"static/001.png": { url: "static/001.png" },
+"static/002.png": { url: "static/002.png" },
+"static/003.png": { url: "static/003.png" },
+"static/004.png": { url: "static/004.png" },
+"static/icon.png": { url: "static/icon.png" }
+}
+}, document.getElementById("root"));
+</script>
+</body>
 </html>
