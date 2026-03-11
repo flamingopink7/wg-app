@@ -4,10 +4,10 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 <title>WG App</title>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; connect-src 'self' https://cdn.jsdelivr.net https://*.google.com https://*.googleapis.com https://*.gstatic.com; worker-src 'self' blob: https://cdn.jsdelivr.net; img-src 'self' data: https://cdn.jsdelivr.net https://flamingopink7.github.io;">
+
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; connect-src 'self' https://cdn.jsdelivr.net https://*.google.com https://*.googleapis.com https://*.gstatic.com https://pypi.org https://files.pythonhosted.org; worker-src 'self' blob: https://cdn.jsdelivr.net; img-src 'self' data: https://cdn.jsdelivr.net https://flamingopink7.github.io;">
+
 <link rel="manifest" href="./manifest.json" />
-<link rel="icon" href="./static/icon.png" />
-<link rel="apple-touch-icon" href="./static/icon.png" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.31.0/build/stlite.css" />
 </head>
 <body>
@@ -48,16 +48,6 @@ st.markdown("""
     .stButton > button { width: 100%; min-height: 65px; border-radius: 12px; font-weight: bold; }
     .block-container { padding-left: 90px !important; }
     [data-testid="stRadio"] { position: fixed !important; top: 0; left: 0; width: 80px; height: 100vh; background-color: #f0f2f6; z-index: 999999; padding-top: 30px; }
-    [data-testid="stRadio"] label { height: 80px; width: 80px; justify-content: center; cursor: pointer; }
-    [data-baseweb="radio"] > div:first-child { display: none !important; }
-    [data-testid="stRadio"] p { color: transparent; font-size: 0px; }
-    
-    /* Hier holt sich der Browser die Bilder nun direkt vom echten GitHub-Pfad! */
-    [data-testid="stRadio"] label:nth-of-type(1) { background-image: url('./static/001.png'); background-size: 45px; background-repeat: no-repeat; background-position: center; }
-    [data-testid="stRadio"] label:nth-of-type(2) { background-image: url('./static/002.png'); background-size: 45px; background-repeat: no-repeat; background-position: center; }
-    [data-testid="stRadio"] label:nth-of-type(3) { background-image: url('./static/icon.png'); background-size: 45px; background-repeat: no-repeat; background-position: center; }
-    [data-testid="stRadio"] label:nth-of-type(4) { background-image: url('./static/003.png'); background-size: 45px; background-repeat: no-repeat; background-position: center; }
-    [data-testid="stRadio"] label:last-of-type { background-image: url('./static/004.png'); background-size: 45px; background-repeat: no-repeat; background-position: center; margin-top: auto; margin-bottom: 30px; }
     header, footer, [data-testid="collapsedControl"] { display: none !important; }
 </style>
 """, unsafe_allow_html=True)
@@ -78,7 +68,7 @@ if not st.session_state.auth:
     st.stop()
 
 st.write(f"Hallo {st.session_state.user}!")
-st.success("App geladen")
+st.success("App erfolgreich geladen!")
 `
 }
 }, document.getElementById("root"));
