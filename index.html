@@ -27,15 +27,16 @@
         /* App Layout */
         #app-screen { display: none; height: 100vh; flex-direction: column; }
         
-        /* Top Header */
-        .top-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 20px 10px 20px; background-color: #f0f2f6; z-index: 10; }
+        /* Top Header (Jetzt transparent/gleichfarbig) */
+        .top-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 20px 10px 20px; background-color: transparent; z-index: 10; }
         .logout-btn { background: transparent; border: none; cursor: pointer; padding: 5px; border-radius: 50%; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
         .logout-btn img { width: 28px; height: 28px; object-fit: contain; }
         .logout-btn:active { background: #e0e2e6; transform: scale(0.95); }
         
         /* Bottom Navigation */
         .bottom-nav { width: 100%; height: 80px; background-color: #e0e2e6; display: flex; flex-direction: row; justify-content: space-around; align-items: center; position: fixed; bottom: 0; left: 0; z-index: 100; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); padding-bottom: env(safe-area-inset-bottom); }
-        .nav-btn { width: 55px; height: 55px; border-radius: 12px; border: none; background: transparent; cursor: pointer; padding: 8px; transition: 0.2s; display: flex; justify-content: center; align-items: center; }
+        /* Buttons etwas kleiner, damit 5 Stück gut nebeneinander passen */
+        .nav-btn { width: 50px; height: 50px; border-radius: 12px; border: none; background: transparent; cursor: pointer; padding: 6px; transition: 0.2s; display: flex; justify-content: center; align-items: center; }
         .nav-btn img { width: 100%; height: 100%; object-fit: contain; }
         .nav-btn.active { background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         
@@ -49,7 +50,7 @@
         .task-btn { width: 100%; min-height: 55px; border-radius: 8px; font-size: 14px; background: white; border: 1px solid #ddd; margin-bottom: 8px; text-align: left; padding: 0 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.1s; }
         .task-btn:active { background-color: #e8eaed; transform: scale(0.98); border-color: #FF4B4B; }
         
-        /* NEU: Dashboard Side-by-Side */
+        /* Dashboard Side-by-Side */
         .team-totals-container { display: flex; justify-content: space-between; gap: 10px; margin-top: 10px; flex-wrap: nowrap; }
         .team-total-box { flex: 1; background: white; padding: 15px 10px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); text-align: center; border-bottom: 4px solid #FF4B4B; min-width: 0; }
         .team-total-name { font-size: 14px; color: #555; margin-bottom: 5px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -66,7 +67,7 @@
         #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 24px; border-radius: 30px; font-weight: bold; opacity: 0; transition: opacity 0.3s; z-index: 1000; pointer-events: none; }
         .info-box { background-color: #e8f4f8; color: #007acc; padding: 15px; border-radius: 8px; font-weight: bold; margin-bottom: 20px; border-left: 5px solid #007acc; font-size: 14px; }
         
-        /* NEU: Custom Modal (Popup) */
+        /* Custom Modal (Popup) */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(3px); z-index: 2000; justify-content: center; align-items: center; padding: 20px; }
         .modal-content { background: white; padding: 25px; border-radius: 12px; width: 100%; max-width: 320px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
         .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
@@ -80,7 +81,9 @@
         <div class="modal-content">
             <h3 id="modal-title" style="margin-top:0;">Bearbeiten</h3>
             <input type="hidden" id="modal-task-id">
-            <input type="hidden" id="modal-edit-type"> <input type="text" id="modal-input-name" placeholder="Neuer Name" style="display:none; margin-bottom: 10px;">
+            <input type="hidden" id="modal-edit-type"> 
+            
+            <input type="text" id="modal-input-name" placeholder="Neuer Name" style="display:none; margin-bottom: 10px;">
             <input type="number" id="modal-input-points" placeholder="Neue Punkte" style="display:none; margin-bottom: 10px;">
             
             <div class="modal-buttons">
@@ -104,7 +107,7 @@
 
     <div id="app-screen">
         <div class="top-header">
-            <h2 id="welcome-text" style="margin:0;">Hallo! 👋</h2>
+            <h2 id="welcome-text" style="margin:0;">Hallo!</h2>
             <button class="logout-btn" onclick="logout()" title="Abmelden">
                 <img src="./static/004.png" alt="Logout">
             </button>
@@ -126,10 +129,15 @@
                 <h3 style="margin-top: 0;">Letzte Aktivitäten</h3>
                 <div id="history-container"><i>Lade Verlauf...</i></div>
             </div>
+
+            <div id="tab-rueckblick" style="display: none;">
+                <h3 style="margin-top: 0;">Rückblick</h3>
+                <p style="font-size: 14px; color: #666;">Die Ergebnisse der letzten 5 Zyklen.</p>
+                <div id="rueckblick-container"><i>Lade Historie...</i></div>
+            </div>
             
             <div id="tab-admin" style="display: none;">
                 <h3 style="margin-top: 0;">⚙️ Aufgaben verwalten</h3>
-                
                 <div class="admin-card">
                     <h4 style="margin-top:0; color:#31333F;">➕ Neue Aufgabe</h4>
                     <div style="display: flex; gap: 10px; margin-bottom: 10px;">
@@ -143,7 +151,6 @@
                     <input type="text" id="new-task" placeholder="Name der Aufgabe" style="margin-bottom: 10px;">
                     <button class="btn-primary" style="min-height: 40px;" onclick="addNewTask()">Hinzufügen</button>
                 </div>
-                
                 <h4 style="margin-top:25px; margin-bottom:10px;">📋 Bestehende bearbeiten</h4>
                 <div id="admin-tasks-container"><i>Lade Daten...</i></div>
             </div>
@@ -159,6 +166,9 @@
             <button class="nav-btn" id="nav-verlauf" onclick="switchTab('verlauf')">
                 <img src="./static/icon.png" alt="Verlauf">
             </button>
+            <button class="nav-btn" id="nav-rueckblick" onclick="switchTab('rueckblick')">
+                <img src="./static/006.png" alt="Rückblick">
+            </button>
             <button class="nav-btn" id="nav-admin" onclick="switchTab('admin')" style="display: none;">
                 <img src="./static/003.png" alt="Admin">
             </button>
@@ -173,13 +183,11 @@
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let currentUser = null;
+        let allPointsCache = []; // Speichert alle Punkte global
 
-        // Feste Farben für das Diagramm und die Legende
         const userColors = {
-            'Livio': '#4A90E2', // Blau
-            'Salwa': '#E94A47', // Rot
-            'Saphira': '#F5A623', // Orange
-            'Nils': '#50E3C2'  // Türkis
+            'Livio': '#4A90E2', 'Salwa': '#E94A47', 
+            'Saphira': '#F5A623', 'Nils': '#50E3C2' 
         };
 
         window.onload = () => {
@@ -211,16 +219,21 @@
             }
         }
 
-        function startApp() {
+        async function startApp() {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-screen').style.display = 'flex';
-            document.getElementById('welcome-text').innerText = `Hallo ${currentUser.name}! 👋`;
+            document.getElementById('welcome-text').innerText = `Hallo ${currentUser.name}!`; // Emoji entfernt
             
             if (currentUser.is_admin) document.getElementById('nav-admin').style.display = 'flex';
             
+            // Lade einmal alle Punkte für alle Auswertungen
+            const { data } = await supabaseClient.from('wg_points').select('*');
+            if(data) allPointsCache = data;
+
             loadTasksAccordion();
             loadStandings();
             loadHistory();
+            loadRueckblick();
             if(currentUser.is_admin) loadAdminTasks();
         }
 
@@ -235,13 +248,12 @@
         }
 
         function switchTab(tabName) {
-            const tabs = ['stand', 'punkte', 'verlauf', 'admin'];
+            const tabs = ['stand', 'punkte', 'verlauf', 'rueckblick', 'admin'];
             tabs.forEach(t => {
                 document.getElementById(`tab-${t}`).style.display = t === tabName ? 'block' : 'none';
                 if(document.getElementById(`nav-${t}`)) document.getElementById(`nav-${t}`).classList.toggle('active', t === tabName);
             });
             if(tabName === 'stand') setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
-            if(tabName === 'verlauf') loadHistory();
         }
 
         function showToast(text) {
@@ -252,7 +264,7 @@
         }
 
         // ==========================================
-        // HILFSFUNKTIONEN (KW Berechnen)
+        // DATUM HILFSFUNKTIONEN
         // ==========================================
         function getISOWeekNumber(d) {
             const date = new Date(d.getTime());
@@ -263,37 +275,29 @@
         }
 
         // ==========================================
-        // CUSTOM MODAL (Popup) LOGIK
+        // CUSTOM MODALS & ACCORDIONS
         // ==========================================
         function openEditNameModal(id, oldName) {
             document.getElementById('modal-title').innerText = "Aufgabe umbenennen";
             document.getElementById('modal-edit-type').value = "name";
             document.getElementById('modal-task-id').value = id;
-            
-            const nameInput = document.getElementById('modal-input-name');
-            nameInput.value = oldName;
-            nameInput.style.display = "block";
+            document.getElementById('modal-input-name').value = oldName;
+            document.getElementById('modal-input-name').style.display = "block";
             document.getElementById('modal-input-points').style.display = "none";
-            
             document.getElementById('edit-modal').style.display = "flex";
         }
 
         function openEditPointsModal(id, oldPoints, taskName) {
-            document.getElementById('modal-title').innerText = "Punkte ändern (" + taskName + ")";
+            document.getElementById('modal-title').innerText = `Punkte ändern (${taskName})`;
             document.getElementById('modal-edit-type').value = "points";
             document.getElementById('modal-task-id').value = id;
-            
-            const pointsInput = document.getElementById('modal-input-points');
-            pointsInput.value = oldPoints;
-            pointsInput.style.display = "block";
+            document.getElementById('modal-input-points').value = oldPoints;
+            document.getElementById('modal-input-points').style.display = "block";
             document.getElementById('modal-input-name').style.display = "none";
-            
             document.getElementById('edit-modal').style.display = "flex";
         }
 
-        function closeModal() {
-            document.getElementById('edit-modal').style.display = "none";
-        }
+        function closeModal() { document.getElementById('edit-modal').style.display = "none"; }
 
         async function saveModal() {
             const id = document.getElementById('modal-task-id').value;
@@ -301,12 +305,12 @@
             
             if (type === "name") {
                 const newName = document.getElementById('modal-input-name').value.trim();
-                if (!newName) return alert("Name darf nicht leer sein.");
+                if (!newName) return;
                 await supabaseClient.from('wg_tasks').update({ task: newName }).eq('id', id);
                 showToast('✅ Name aktualisiert!');
             } else if (type === "points") {
                 const newPoints = parseInt(document.getElementById('modal-input-points').value);
-                if (isNaN(newPoints)) return alert("Bitte gültige Zahl eingeben.");
+                if (isNaN(newPoints)) return;
                 await supabaseClient.from('wg_tasks').update({ points: newPoints }).eq('id', id);
                 showToast('✅ Punkte aktualisiert!');
             }
@@ -316,14 +320,10 @@
             loadTasksAccordion();
         }
 
-        // ==========================================
-        // PUNKTE & ADMIN AKKORDEON
-        // ==========================================
         async function loadTasksAccordion() {
             const container = document.getElementById('accordion-container');
-            const { data: tasks, error } = await supabaseClient.from('wg_tasks').select('*');
-            if (error) return;
-            
+            const { data: tasks } = await supabaseClient.from('wg_tasks').select('*');
+            if (!tasks) return;
             const categories = ['Quick-Wins', 'Core-Tasks', 'Deep-Clean'];
             container.innerHTML = '';
 
@@ -332,42 +332,7 @@
                 if (catTasks.length > 0) {
                     let html = `<div class="accordion"><div class="accordion-header" onclick="toggleAccordion('cat-${index}')">📍 ${cat} <span>▼</span></div><div class="accordion-content" id="cat-${index}">`;
                     catTasks.forEach(task => {
-                        html += `<button class="task-btn" onclick="savePoints('${task.task}', ${task.points})"><span>${task.task}</span><span style="color:#FF4B4B; font-weight:bold;">${task.points}P</span></button>`;
-                    });
-                    html += `</div></div>`;
-                    container.innerHTML += html;
-                }
-            });
-        }
-
-        async function loadAdminTasks() {
-            const container = document.getElementById('admin-tasks-container');
-            const { data: tasks, error } = await supabaseClient.from('wg_tasks').select('*');
-            if (error) return;
-
-            const categories = ['Quick-Wins', 'Core-Tasks', 'Deep-Clean'];
-            container.innerHTML = '';
-
-            categories.forEach((cat, index) => {
-                const catTasks = tasks.filter(t => t.category === cat).sort((a, b) => a.points - b.points);
-                if (catTasks.length > 0) {
-                    // NEU: Auch der Admin-Bereich ist jetzt ein Akkordeon!
-                    let html = `<div class="accordion"><div class="accordion-header" onclick="toggleAccordion('admin-cat-${index}')">📍 ${cat} <span>▼</span></div><div class="accordion-content" id="admin-cat-${index}">`;
-                    
-                    catTasks.forEach(task => {
-                        html += `
-                            <div class="admin-task-item">
-                                <div style="flex-grow: 1; padding-right: 10px;">
-                                    <strong>${task.task}</strong><br>
-                                    <span style="color:#FF4B4B; font-weight:bold; font-size:12px;">${task.points} Punkte</span>
-                                </div>
-                                <div class="admin-task-actions">
-                                    <button class="btn-edit" onclick="openEditNameModal(${task.id}, '${task.task.replace(/'/g, "\\'")}')" title="Name">✏️</button>
-                                    <button class="btn-edit" onclick="openEditPointsModal(${task.id}, ${task.points}, '${task.task.replace(/'/g, "\\'")}')" title="Punkte">🔢</button>
-                                    <button class="btn-danger" onclick="deleteTask(${task.id})" title="Löschen">🗑️</button>
-                                </div>
-                            </div>
-                        `;
+                        html += `<button class="task-btn" onclick="savePoints('${task.task.replace(/'/g, "\\'")}', ${task.points})"><span>${task.task}</span><span style="color:#FF4B4B; font-weight:bold;">${task.points}P</span></button>`;
                     });
                     html += `</div></div>`;
                     container.innerHTML += html;
@@ -377,34 +342,8 @@
 
         function toggleAccordion(id) {
             const content = document.getElementById(id);
-            if (content.style.display === "block") {
-                content.style.display = "none";
-            } else {
-                content.style.display = "block";
-            }
-        }
-
-        async function addNewTask() {
-            const cat = document.getElementById('new-cat').value;
-            const name = document.getElementById('new-task').value.trim();
-            const points = parseInt(document.getElementById('new-points').value);
-
-            if(!name || isNaN(points)) return alert("Bitte Name und Punkte angeben!");
-
-            await supabaseClient.from('wg_tasks').insert([{ category: cat, task: name, points: points }]);
-            document.getElementById('new-task').value = '';
-            document.getElementById('new-points').value = '';
-            showToast('✅ Aufgabe hinzugefügt!');
-            loadAdminTasks();
-            loadTasksAccordion();
-        }
-
-        async function deleteTask(id) {
-            if(!confirm("Aufgabe endgültig löschen?")) return;
-            await supabaseClient.from('wg_tasks').delete().eq('id', id);
-            showToast('🗑️ Aufgabe gelöscht!');
-            loadAdminTasks();
-            loadTasksAccordion();
+            if (content.style.display === "block") content.style.display = "none";
+            else content.style.display = "block";
         }
 
         async function savePoints(taskName, points) {
@@ -412,18 +351,24 @@
             if (!error) {
                 showToast('✅ Punkte gespeichert!');
                 document.querySelectorAll('.accordion-content').forEach(el => el.style.display = "none");
+                
+                // Punkte-Cache updaten
+                const { data } = await supabaseClient.from('wg_points').select('*');
+                if(data) allPointsCache = data;
+                
                 loadStandings();
                 loadHistory();
             }
         }
 
         // ==========================================
-        // VERLAUF
+        // ADMIN & VERLAUF
         // ==========================================
         async function loadHistory() {
             const container = document.getElementById('history-container');
-            const { data: history, error } = await supabaseClient.from('wg_points').select('*').order('timestamp', { ascending: false }).limit(40);
-            if (error || history.length === 0) { container.innerHTML = "Keine Aktivitäten."; return; }
+            const history = [...allPointsCache].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 40);
+            
+            if (history.length === 0) { container.innerHTML = "Keine Aktivitäten."; return; }
             
             container.innerHTML = history.map(item => {
                 const dateObj = new Date(item.timestamp);
@@ -445,81 +390,198 @@
             if(!confirm("Eintrag wirklich löschen?")) return;
             await supabaseClient.from('wg_points').delete().eq('id', id);
             showToast('🗑️ Gelöscht!');
+            
+            const { data } = await supabaseClient.from('wg_points').select('*');
+            if(data) allPointsCache = data;
+            
             loadHistory();
             loadStandings();
         }
 
+        async function loadAdminTasks() {
+            const container = document.getElementById('admin-tasks-container');
+            const { data: tasks } = await supabaseClient.from('wg_tasks').select('*');
+            if (!tasks) return;
+
+            const categories = ['Quick-Wins', 'Core-Tasks', 'Deep-Clean'];
+            container.innerHTML = '';
+
+            categories.forEach((cat, index) => {
+                const catTasks = tasks.filter(t => t.category === cat).sort((a, b) => a.points - b.points);
+                if (catTasks.length > 0) {
+                    let html = `<div class="accordion"><div class="accordion-header" onclick="toggleAccordion('admin-cat-${index}')">📍 ${cat} <span>▼</span></div><div class="accordion-content" id="admin-cat-${index}">`;
+                    catTasks.forEach(task => {
+                        html += `
+                            <div class="admin-task-item">
+                                <div style="flex-grow: 1; padding-right: 10px;">
+                                    <strong>${task.task}</strong><br><span style="color:#FF4B4B; font-weight:bold; font-size:12px;">${task.points} Punkte</span>
+                                </div>
+                                <div class="admin-task-actions">
+                                    <button class="btn-edit" onclick="openEditNameModal(${task.id}, '${task.task.replace(/'/g, "\\'")}')" title="Name">✏️</button>
+                                    <button class="btn-edit" onclick="openEditPointsModal(${task.id}, ${task.points}, '${task.task.replace(/'/g, "\\'")}')" title="Punkte">🔢</button>
+                                    <button class="btn-danger" onclick="deleteTask(${task.id})" title="Löschen">🗑️</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += `</div></div>`;
+                    container.innerHTML += html;
+                }
+            });
+        }
+
+        async function addNewTask() {
+            const cat = document.getElementById('new-cat').value;
+            const name = document.getElementById('new-task').value.trim();
+            const points = parseInt(document.getElementById('new-points').value);
+            if(!name || isNaN(points)) return;
+            await supabaseClient.from('wg_tasks').insert([{ category: cat, task: name, points: points }]);
+            document.getElementById('new-task').value = ''; document.getElementById('new-points').value = '';
+            showToast('✅ Aufgabe hinzugefügt!');
+            loadAdminTasks(); loadTasksAccordion();
+        }
+
+        async function deleteTask(id) {
+            if(!confirm("Aufgabe endgültig löschen?")) return;
+            await supabaseClient.from('wg_tasks').delete().eq('id', id);
+            showToast('🗑️ Aufgabe gelöscht!');
+            loadAdminTasks(); loadTasksAccordion();
+        }
+
         // ==========================================
-        // DASHBOARD (Custom Legend & Nebeneinander)
+        // DASHBOARD (Persönlich sortiert)
         // ==========================================
-        async function loadStandings() {
+        function loadStandings() {
             const baseDate = new Date('2024-01-01T00:00:00Z');
             const today = new Date();
             const cycleNum = Math.floor((today - baseDate) / (1000 * 60 * 60 * 24) / 14);
             const startDate = new Date(baseDate.getTime() + (cycleNum * 14) * 24 * 60 * 60 * 1000);
             const endDate = new Date(startDate.getTime() + 13 * 24 * 60 * 60 * 1000);
             
-            // NEU: KW Berechnung
             const kwStart = getISOWeekNumber(startDate);
             const kwEnd = getISOWeekNumber(endDate);
-            const dateOptions = { day: '2-digit', month: '2-digit' };
-            
-            document.getElementById('cycle-info').innerText = `📍 KW: ${kwStart}/${kwEnd}; ${startDate.toLocaleDateString('de-DE', dateOptions)} - ${endDate.toLocaleDateString('de-DE', dateOptions)}`;
+            document.getElementById('cycle-info').innerText = `📍 KW: ${kwStart}/${kwEnd}; ${startDate.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })} - ${endDate.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}`;
 
-            const { data: pointsData } = await supabaseClient.from('wg_points').select('*');
-            
-            const currentPoints = pointsData.filter(p => {
+            const currentPoints = allPointsCache.filter(p => {
                 const pDate = new Date(p.timestamp);
                 return pDate >= startDate && pDate <= new Date(endDate.getTime() + 24*60*60*1000);
             });
 
             let userTotals = {}, teamScores = {}, teamMembers = {};
             
+            // Finde alle existierenden Teams (damit auch 0 Punkte Teams gezeichnet werden)
+            const allKnownTeams = [...new Set(allPointsCache.map(p => p.team))];
+            let myTeam = currentUser.team;
+            let otherTeam = allKnownTeams.find(t => t !== myTeam) || (myTeam === 'LiSa' ? 'SaNi' : 'LiSa'); // Fallback
+            
+            // Initialisiere Scores mit 0
+            teamScores[myTeam] = 0;
+            teamScores[otherTeam] = 0;
+
             currentPoints.forEach(p => {
                 if (!userTotals[p.user_name]) userTotals[p.user_name] = { team: p.team, total: 0 };
                 userTotals[p.user_name].total += p.points;
-                
-                if (!teamScores[p.team]) teamScores[p.team] = 0;
                 teamScores[p.team] += p.points;
-                
                 if (!teamMembers[p.team]) teamMembers[p.team] = new Set();
                 teamMembers[p.team].add(p.user_name);
             });
 
-            // Plotly Daten mit festen Farben befüllen
             let plotData = Object.entries(userTotals).map(([user, info]) => ({
-                x: [info.team], 
-                y: [info.total], 
-                name: user, 
-                type: 'bar', 
-                text: [String(info.total)], 
-                textposition: 'auto',
-                marker: { color: userColors[user] || '#999' } // Greift auf unsere festen Farben zurück
+                x: [info.team], y: [info.total], name: user, type: 'bar', text: [String(info.total)], textposition: 'auto',
+                marker: { color: userColors[user] || '#999' }
             }));
+
+            // Zwingt Plotly dazu, DEIN Team immer links (Index 0) anzuzeigen
+            const orderedTeams = [myTeam, otherTeam];
 
             if(plotData.length === 0) {
                 document.getElementById('chart-div').innerHTML = "<p style='text-align:center; color:#888; margin-top:50px;'>Noch keine Punkte in diesem Zyklus!</p>";
                 document.getElementById('team-totals-area').innerHTML = "";
             } else {
-                // showlegend: false (Wir blenden die Plotly-Legende aus!)
-                Plotly.newPlot('chart-div', plotData, { barmode: 'stack', margin: { t: 10, l: 30, r: 20, b: 30 }, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', showlegend: false }, { displayModeBar: false, responsive: true, staticPlot: true });
+                Plotly.newPlot('chart-div', plotData, { 
+                    barmode: 'stack', margin: { t: 10, l: 30, r: 20, b: 30 }, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', showlegend: false,
+                    xaxis: { categoryorder: 'array', categoryarray: orderedTeams } // Sortierung anwenden
+                }, { displayModeBar: false, responsive: true, staticPlot: true });
                 
-                // NEU: Team-Kacheln mit integrierter Beschriftung (Legende)
-                document.getElementById('team-totals-area').innerHTML = Object.entries(teamScores).map(([teamName, score]) => {
-                    // Generiert die kleinen Punkte und Namen für die Legende im Kasten
+                // Boxen in der gleichen Reihenfolge zeichnen (Dein Team zuerst)
+                document.getElementById('team-totals-area').innerHTML = orderedTeams.map(teamName => {
                     let legendHtml = Array.from(teamMembers[teamName] || []).map(user => {
                         const color = userColors[user] || '#999';
                         return `<span style="white-space: nowrap;"><span style="color:${color}; font-size:14px;">●</span> ${user}</span>`;
-                    }).join('<br>'); // Namen untereinander in der Legende
+                    }).join('<br>');
                     
                     return `
                     <div class="team-total-box">
                         <div class="team-total-name">Team ${teamName}</div>
-                        <div class="team-total-score">${score} Pkt</div>
+                        <div class="team-total-score">${teamScores[teamName]} Pkt</div>
                         <div class="team-legend">${legendHtml}</div>
                     </div>`;
                 }).join('');
             }
+        }
+
+        // ==========================================
+        // RÜCKBLICK (Letzte 5 Zyklen)
+        // ==========================================
+        function loadRueckblick() {
+            const container = document.getElementById('rueckblick-container');
+            const baseDate = new Date('2024-01-01T00:00:00Z');
+            const today = new Date();
+            const cycleNum = Math.floor((today - baseDate) / (1000 * 60 * 60 * 24) / 14);
+
+            let html = '';
+            const allKnownTeams = [...new Set(allPointsCache.map(p => p.team))];
+            let myTeam = currentUser.team;
+            let otherTeamFallback = allKnownTeams.find(t => t !== myTeam) || (myTeam === 'LiSa' ? 'SaNi' : 'LiSa');
+
+            for (let i = 1; i <= 5; i++) {
+                const pastCycleNum = cycleNum - i;
+                if (pastCycleNum < 0) break; 
+
+                const startDate = new Date(baseDate.getTime() + (pastCycleNum * 14) * 24 * 60 * 60 * 1000);
+                const endDate = new Date(startDate.getTime() + 13 * 24 * 60 * 60 * 1000);
+
+                const cyclePoints = allPointsCache.filter(p => {
+                    const pDate = new Date(p.timestamp);
+                    return pDate >= startDate && pDate <= new Date(endDate.getTime() + 24*60*60*1000);
+                });
+
+                let scores = {};
+                cyclePoints.forEach(p => {
+                    if (!scores[p.team]) scores[p.team] = 0;
+                    scores[p.team] += p.points;
+                });
+
+                const myScore = scores[myTeam] || 0;
+                let otherTeam = Object.keys(scores).find(t => t !== myTeam) || otherTeamFallback;
+                const otherScore = scores[otherTeam] || 0;
+
+                let resultBg = '#f1f3f4'; let resultBorder = '#9aa0a6'; let resultText = '🤝 Unentschieden';
+                if (myScore > otherScore) {
+                    resultBg = '#e6f4ea'; resultBorder = '#34a853'; resultText = '🏆 Gewonnen';
+                } else if (myScore < otherScore) {
+                    resultBg = '#fce8e6'; resultBorder = '#ea4335'; resultText = '❌ Verloren';
+                }
+
+                const kwStart = getISOWeekNumber(startDate);
+                const kwEnd = getISOWeekNumber(endDate);
+                
+                html += `
+                    <div style="background: ${resultBg}; border-left: 5px solid ${resultBorder}; padding: 15px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                        <div style="font-size: 12px; color: #555; margin-bottom: 8px;">KW: ${kwStart}/${kwEnd}; ${startDate.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })} - ${endDate.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}</div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div><strong style="font-size: 16px;">${resultText}</strong></div>
+                            <div style="text-align: right; font-size: 14px;">
+                                <strong>Team ${myTeam}: ${myScore} Pkt</strong><br>
+                                <span style="color:#666;">Team ${otherTeam}: ${otherScore} Pkt</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (html === '') html = '<i>Noch nicht genug alte Zyklen vorhanden.</i>';
+            container.innerHTML = html;
         }
     </script>
 </body>
