@@ -45,16 +45,16 @@
         // ==========================================
         // 1. HIER DEINE SUPABASE KEYS EINTRAGEN!
         // ==========================================
-        const SUPABASE_URL = 'https://ckghuvwtafygmlxaylyi.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_AvT0AGUjHlmgWlrIZDD3Ng_JliBmjY-';
+        const SUPABASE_URL = 'DEINE_PROJECT_URL_HIER_EINTRAGEN';
+        const SUPABASE_KEY = 'DEINEN_ANON_KEY_HIER_EINTRAGEN';
         
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // HIER WURDE DER NAME GEÄNDERT:
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         // ==========================================
         // 2. LOGIK FÜRS LOGIN
         // ==========================================
         
-        // Baut das eingegebene Passwort in deinen Hash um
         async function hashPassword(password) {
             const encoder = new TextEncoder();
             const data = encoder.encode(password);
@@ -72,8 +72,8 @@
             // Passwort hashen
             const hashedPass = await hashPassword(passIn);
 
-            // In Supabase nach dem User suchen (ilike ignoriert Groß-/Kleinschreibung!)
-            const { data, error } = await supabase
+            // In Supabase nach dem User suchen
+            const { data, error } = await supabaseClient
                 .from('wg_users')
                 .select('*')
                 .ilike('name', userIn)
