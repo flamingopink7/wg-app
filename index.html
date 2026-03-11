@@ -16,7 +16,6 @@
         requirements: ["pandas", "plotly", "streamlit-gsheets"],
         entrypoint: "app.py",
         files: {
-          # --- DIE NEUE SICHERE KONFIGURATION ---
           ".streamlit/secrets.toml": `
 [connections.gsheets]
 spreadsheet = "https://docs.google.com/spreadsheets/d/1hX1kA8MnpgH5z9w-nhyX7gjFGqmlrT6-7ztM0MPo9uQ/edit?usp=sharing"
@@ -30,19 +29,16 @@ from datetime import datetime, date, timedelta
 import plotly.express as px
 from streamlit_gsheets import GSheetsConnection
 
-# --- PASSWORT HASHES ---
-# (Wie besprochen: Nur die Hashes, keine Klartext-Passwörter)
 USER_PASSWORDS = {
-    "Livio": "8e8869158309575390632a93b584a2826a793c5d790d0b0473e0a293933f7216", # Passwort: livio_pass
-    "Salwa": "e26521568288f34354c0382375997237887e2f5080072979207869634e3e3c6a", # Passwort: salwa_pass
-    "Saphira": "153702174c83093282f641b96434f07a72661858004b3e390212f37c35a63973", # Passwort: saphira_pass
-    "Nils": "83234914a8e5621404c0840e6c6978413f4384a86d26715f5a8c268f70529683"   # Passwort: nils_pass
+    "Livio": "8e8869158309575390632a93b584a2826a793c5d790d0b0473e0a293933f7216",
+    "Salwa": "e26521568288f34354c0382375997237887e2f5080072979207869634e3e3c6a",
+    "Saphira": "153702174c83093282f641b96434f07a72661858004b3e390212f37c35a63973",
+    "Nils": "83234914a8e5621404c0840e6c6978413f4384a86d26715f5a8c268f70529683"
 }
 
 def hash_pw(password):
     return hashlib.sha256(str.encode(password)).hexdigest()
 
-# Verbindung via Public Link (Kein Service Account Key im Code!)
 conn = st.connection("gsheets", type=GSheetsConnection)
 gs_write_lock = threading.Lock()
 
@@ -89,7 +85,7 @@ def add_points_gs(user, team, task, points):
     ts = datetime.now().isoformat()
     if "optimistic_points" not in st.session_state: st.session_state.optimistic_points = []
     st.session_state.optimistic_points.append({"timestamp": ts, "user": user, "team": team, "task": task, "points": int(points)})
-    st.toast("✅ Erledigt!", icon="🎉")
+    st.toast("Done!", icon="🎉")
     def _write_task():
         with gs_write_lock:
             try:
@@ -114,7 +110,7 @@ def delete_points_gs(timestamp_val):
                 load_points_gs.clear()
             except Exception as e: print(f"Delete failed: {e}")
     threading.Thread(target=_delete_task).start()
-    st.toast("🗑️ Gelöscht!", icon="🧹")
+    st.toast("Deleted!", icon="🧹")
 
 def save_tasks_gs(df_tasks):
     try: conn.clear(worksheet="WG_Tasks")
@@ -135,14 +131,13 @@ def get_cycle_info(target_date):
 
 st.set_page_config(page_title="WG", page_icon="🏔️", layout="centered")
 
-# --- CSS (Design unverändert) ---
 st.markdown("""
 <style>
     .stButton > button { width: 100%; min-height: 65px; border-radius: 12px; font-weight: bold; }
     .block-container { padding-left: 90px !important; }
     [data-testid="stRadio"] { 
         position: fixed !important; top: 0; left: 0; width: 80px; height: 100vh; 
-        background-color: var(--secondary-background-color); z-index: 999999; padding-top: 30px;
+        background-color: #f0f2f6; z-index: 999999; padding-top: 30px;
     }
     [data-testid="stRadio"] label { height: 80px; width: 80px; justify-content: center; cursor: pointer; }
     [data-baseweb="radio"] > div:first-child { display: none !important; }
@@ -163,7 +158,7 @@ if "authenticated" not in st.session_state:
     st.session_state.update({"user": None, "authenticated": False, "team": None, "is_admin": False, "deleted_timestamps": set()})
 
 if not st.session_state.authenticated:
-    st.title("🏔️ WG Login")
+    st.title("Login")
     u_in = st.text_input("User")
     p_in = st.text_input("PW", type="password")
     if st.button("Anmelden"):
@@ -178,7 +173,6 @@ if not st.session_state.authenticated:
         else: st.error("User unbekannt")
     st.stop()
 
-# --- NAVIGATION ---
 nav_options = {"Stand": "Stand", "Punkte": "Punkte", "Verlauf": "Verlauf"}
 if st.session_state.is_admin: nav_options["Admin"] = "Admin"
 nav_options["Logout"] = "Logout"
@@ -186,25 +180,25 @@ nav_options["Logout"] = "Logout"
 sel = st.radio("Nav", list(nav_options.keys()), label_visibility="collapsed", key="main_nav")
 active_tab = nav_options[sel]
 
-st.write(f"Hallo **{st.session_state.user}**! 👋")
+st.write(f"Hallo {st.session_state.user}!")
 
 if active_tab == "Stand":
     df = get_active_points() 
     cs, ce, _, _ = get_cycle_info(date.today())
-    st.info(f"📍 **KW{cs.isocalendar()[1]} & KW{ce.isocalendar()[1]}**")
+    st.info(f"KW {cs.isocalendar()[1]}")
     if not df.empty:
         df['Datum'] = pd.to_datetime(df['timestamp']).dt.date
         curr = df[(df['Datum'] >= cs) & (df['Datum'] <= ce)]
         if not curr.empty:
             agg = curr.groupby(["team", "user"])["points"].sum().reset_index()
-            fig = px.bar(agg, x="team", y="points", color="user", barmode='stack', height=350)
+            fig = px.bar(agg, x="team", y="points", color="user", barmode="stack", height=350)
             st.plotly_chart(fig, use_container_width=True)
     else: st.warning("Keine Punkte.")
 
 elif active_tab == "Punkte":
     cat_order = ["Quick-Wins", "Core-Tasks", "Deep-Clean"]
     for cat in cat_order:
-        with st.expander(f"📍 {cat}"):
+        with st.expander(cat):
             tasks = df_tasks[df_tasks["Category"] == cat].sort_values("Points", ascending=False)
             for r in tasks.itertuples():
                 if st.button(f"{r.Task} ({r.Points}P)", key=f"p_{r.Index}"):
