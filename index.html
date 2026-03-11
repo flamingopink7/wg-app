@@ -12,7 +12,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.31.0/build/stlite.js"></script>
 <script>
 stlite.mount({
-requirements: ["pandas", "plotly", "streamlit-gsheets"],
+// HIER WURDE DER PAKETNAME KORRIGIERT:
+requirements: ["pandas", "plotly", "st-gsheets-connection"],
 entrypoint: "app.py",
 files: {
 ".streamlit/secrets.toml": `
