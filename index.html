@@ -49,12 +49,15 @@ if not st.session_state.auth:
     u = st.text_input("User")
     p = st.text_input("PW", type="password")
     if st.button("Anmelden"):
-        if u in USER_PASSWORDS and hash_pw(p) == USER_PASSWORDS[u]:
-            st.session_state.update({"user": u, "auth": True})
-            st.rerun()
-        else:
-            st.error("Falsch")
-    st.stop()
+            # Sucht den Namen unabhängig von Groß-/Kleinschreibung
+            user_match = next((k for k in USER_PASSWORDS.keys() if k.lower() == u.strip().lower()), None)
+            
+            if user_match and hash_pw(p) == USER_PASSWORDS[user_match]:
+                st.session_state.update({"user": user_match, "auth": True})
+                st.rerun()
+            else:
+                st.error("User oder Passwort falsch")
+        st.stop()
 
 st.write(f"Hallo {st.session_state.user}!")
 st.success("App fehlerfrei geladen! DuckDB wurde besiegt. 🚀")
