@@ -2,11 +2,15 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://cdn.jsdelivr.net https://*.google.com https://*.googleapis.com https://*.gstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net;">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>WG App</title>
+    
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://cdn.jsdelivr.net; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; connect-src 'self' https://cdn.jsdelivr.net https://*.google.com https://*.googleapis.com https://*.gstatic.com; worker-src 'self' blob:; img-src 'self' data: https://cdn.jsdelivr.net;">
+
     <link rel="manifest" href="./manifest.json" />
-    <link rel="apple-touch-icon" href="./icon.png" />
+    <link rel="apple-touch-icon" href="./static/icon.png" />
+    <link rel="icon" href="./static/icon.png" />
+    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.63.1/build/stlite.css" />
   </head>
   <body>
@@ -113,23 +117,6 @@ def delete_points_gs(timestamp_val):
     threading.Thread(target=_delete_task).start()
     st.toast("Deleted!", icon="🧹")
 
-def save_tasks_gs(df_tasks):
-    try: conn.clear(worksheet="WG_Tasks")
-    except: pass
-    conn.update(worksheet="WG_Tasks", data=df_tasks)
-    load_config_gs.clear()
-
-def get_base_date(): return date(2024, 1, 1)
-
-def get_cycle_info(target_date):
-    base_date = get_base_date()
-    delta = (target_date - base_date).days
-    cycle_num = delta // 14
-    start = base_date + timedelta(days=cycle_num * 14)
-    end = start + timedelta(days=13)
-    pkg = "Paket A" if cycle_num % 2 == 0 else "Paket B"
-    return start, end, pkg, cycle_num
-
 st.set_page_config(page_title="WG", page_icon="🏔️", layout="centered")
 
 st.markdown("""
@@ -185,15 +172,10 @@ st.write(f"Hallo {st.session_state.user}!")
 
 if active_tab == "Stand":
     df = get_active_points() 
-    cs, ce, _, _ = get_cycle_info(date.today())
-    st.info(f"KW {cs.isocalendar()[1]}")
     if not df.empty:
-        df['Datum'] = pd.to_datetime(df['timestamp']).dt.date
-        curr = df[(df['Datum'] >= cs) & (df['Datum'] <= ce)]
-        if not curr.empty:
-            agg = curr.groupby(["team", "user"])["points"].sum().reset_index()
-            fig = px.bar(agg, x="team", y="points", color="user", barmode="stack", height=350)
-            st.plotly_chart(fig, use_container_width=True)
+        agg = df.groupby(["team", "user"])["points"].sum().reset_index()
+        fig = px.bar(agg, x="team", y="points", color="user", barmode="stack", height=350)
+        st.plotly_chart(fig, use_container_width=True)
     else: st.warning("Keine Punkte.")
 
 elif active_tab == "Punkte":
