@@ -22,7 +22,7 @@
         /* Main App Setup */
         #app-screen { display: none; height: 100vh; flex-direction: row; }
         
-        /* Sidebar (ersetzt dein stRadio) */
+        /* Sidebar */
         .sidebar { width: 80px; background-color: #e0e2e6; display: flex; flex-direction: column; align-items: center; padding-top: 30px; }
         .nav-btn { width: 60px; height: 60px; border-radius: 12px; border: none; background: transparent; font-size: 24px; cursor: pointer; margin-bottom: 15px; display: flex; justify-content: center; align-items: center; }
         .nav-btn.active { background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
@@ -31,12 +31,12 @@
         /* Content Area */
         .content { flex-grow: 1; padding: 30px; overflow-y: auto; }
         
-        /* Task Buttons (ersetzt st.button) */
+        /* Task Buttons */
         .category-title { background-color: white; padding: 15px; border-radius: 10px; margin-top: 20px; margin-bottom: 10px; font-weight: bold; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .task-btn { width: 100%; min-height: 65px; border-radius: 12px; font-weight: bold; font-size: 15px; background: white; border: 1px solid #ddd; margin-bottom: 8px; text-align: left; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; }
         .task-btn:active { background-color: #f0f2f6; transform: scale(0.98); }
         
-        /* Toast Notification (ersetzt st.toast) */
+        /* Toast Notification */
         #toast { position: fixed; bottom: -50px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 24px; border-radius: 30px; font-weight: bold; transition: bottom 0.3s; z-index: 1000; }
     </style>
 </head>
@@ -80,13 +80,13 @@
 
     <script>
         // ==========================================
-        // 1. SUPABASE KEYS (Wieder einfügen!)
+        // 1. SUPABASE KEYS (Fix und fertig eingebaut)
         // ==========================================
         const SUPABASE_URL = 'https://ckghuvwtafygmlxaylyi.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_AvT0AGUjHlmgWlrIZDD3Ng_JliBmjY-';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let currentUser = null; // Speichert den eingeloggten User
+        let currentUser = null;
 
         // ==========================================
         // 2. LOGIN LOGIK
@@ -107,12 +107,11 @@
             const { data, error } = await supabaseClient.from('wg_users').select('*').ilike('name', userIn).single();
 
             if (data && data.password_hash === hashedPass) {
-                currentUser = data; // User speichern
+                currentUser = data;
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('app-screen').style.display = 'flex';
                 document.getElementById('welcome-text').innerText = `Hallo ${currentUser.name}! 👋`;
                 
-                // Sobald eingeloggt, Aufgaben aus DB laden!
                 loadTasks();
             } else {
                 document.getElementById('error-msg').style.display = 'block';
@@ -142,24 +141,19 @@
         // ==========================================
         async function loadTasks() {
             const container = document.getElementById('tasks-container');
-            // Holt alle Aufgaben aus Supabase, absteigend sortiert nach Punkten
             const { data: tasks, error } = await supabaseClient.from('wg_tasks').select('*').order('points', { ascending: false });
             
             if (error) { container.innerHTML = `<p style="color:red">Fehler beim Laden: ${error.message}</p>`; return; }
 
-            // Aufgaben nach Kategorie gruppieren
             const categories = ['Quick-Wins', 'Core-Tasks', 'Deep-Clean'];
-            container.innerHTML = ''; // Lade-Text löschen
+            container.innerHTML = ''; 
 
             categories.forEach(cat => {
                 const catTasks = tasks.filter(t => t.category === cat);
                 if (catTasks.length > 0) {
-                    // Kategorie-Titel (Expander-Ersatz)
                     container.innerHTML += `<div class="category-title">📍 ${cat}</div>`;
                     
-                    // Buttons für jede Aufgabe generieren
                     catTasks.forEach(task => {
-                        // Wir übergeben den Namen und die Punkte an die Funktion savePoints
                         const btnHTML = `<button class="task-btn" onclick="savePoints('${task.task}', ${task.points})">
                                             <span>${task.task}</span>
                                             <span style="color:#FF4B4B;">${task.points}P</span>
@@ -170,7 +164,6 @@
             });
         }
 
-        // Diese Funktion wird aufgerufen, wenn du auf eine Aufgabe klickst!
         async function savePoints(taskName, points) {
             const { error } = await supabaseClient.from('wg_points').insert([
                 { 
@@ -184,7 +177,6 @@
             if (error) {
                 alert("Fehler beim Speichern: " + error.message);
             } else {
-                // Zeigt ein kurzes "Erfolgreich!" Popup an (wie st.toast)
                 const toast = document.getElementById('toast');
                 toast.style.bottom = '30px';
                 setTimeout(() => { toast.style.bottom = '-50px'; }, 3000);
