@@ -9,35 +9,32 @@
     <link rel="apple-touch-icon" href="./static/icon.png" />
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     
     <style>
         body { font-family: sans-serif; background-color: #f0f2f6; margin: 0; color: #31333F; height: 100vh; overflow: hidden; }
         
-        /* Login Screen Setup */
         #login-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; padding: 20px; }
         .login-box { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); width: 100%; max-width: 400px; }
         input { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
         .btn-primary { width: 100%; min-height: 50px; background-color: #FF4B4B; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
         
-        /* Main App Setup */
         #app-screen { display: none; height: 100vh; flex-direction: row; }
         
-        /* Sidebar */
         .sidebar { width: 80px; background-color: #e0e2e6; display: flex; flex-direction: column; align-items: center; padding-top: 30px; }
         .nav-btn { width: 60px; height: 60px; border-radius: 12px; border: none; background: transparent; font-size: 24px; cursor: pointer; margin-bottom: 15px; display: flex; justify-content: center; align-items: center; }
         .nav-btn.active { background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .nav-btn.logout { margin-top: auto; margin-bottom: 30px; }
         
-        /* Content Area */
         .content { flex-grow: 1; padding: 30px; overflow-y: auto; }
         
-        /* Task Buttons */
         .category-title { background-color: white; padding: 15px; border-radius: 10px; margin-top: 20px; margin-bottom: 10px; font-weight: bold; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .task-btn { width: 100%; min-height: 65px; border-radius: 12px; font-weight: bold; font-size: 15px; background: white; border: 1px solid #ddd; margin-bottom: 8px; text-align: left; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; }
         .task-btn:active { background-color: #f0f2f6; transform: scale(0.98); }
         
-        /* Toast Notification */
         #toast { position: fixed; bottom: -50px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 24px; border-radius: 30px; font-weight: bold; transition: bottom 0.3s; z-index: 1000; }
+        
+        .info-box { background-color: #e8f4f8; color: #007acc; padding: 15px; border-radius: 8px; font-weight: bold; margin-bottom: 20px; border-left: 5px solid #007acc; }
     </style>
 </head>
 <body>
@@ -65,7 +62,8 @@
             <h2 id="welcome-text" style="margin-top:0;">Hallo! 👋</h2>
             
             <div id="tab-stand" style="display: none;">
-                <p>Hier bauen wir im nächsten Schritt das Balkendiagramm (Plotly) ein! 🚧</p>
+                <div id="cycle-info" class="info-box">Lade Zeitraum...</div>
+                <div id="chart-div" style="width:100%; height:400px;"></div>
             </div>
             
             <div id="tab-punkte">
@@ -79,18 +77,12 @@
     <div id="toast">✅ Punkte gespeichert!</div>
 
     <script>
-        // ==========================================
-        // 1. SUPABASE KEYS (Fix und fertig eingebaut)
-        // ==========================================
         const SUPABASE_URL = 'https://ckghuvwtafygmlxaylyi.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_AvT0AGUjHlmgWlrIZDD3Ng_JliBmjY-';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let currentUser = null;
 
-        // ==========================================
-        // 2. LOGIN LOGIK
-        // ==========================================
         async function hashPassword(password) {
             const encoder = new TextEncoder();
             const data = encoder.encode(password);
@@ -113,6 +105,7 @@
                 document.getElementById('welcome-text').innerText = `Hallo ${currentUser.name}! 👋`;
                 
                 loadTasks();
+                loadStandings(); // <--- Läd direkt nach dem Login das Diagramm
             } else {
                 document.getElementById('error-msg').style.display = 'block';
             }
@@ -125,25 +118,18 @@
             document.getElementById('password').value = '';
         }
 
-        // ==========================================
-        // 3. NAVIGATION (Tabs wechseln)
-        // ==========================================
         function switchTab(tabName) {
             document.getElementById('tab-stand').style.display = tabName === 'stand' ? 'block' : 'none';
             document.getElementById('tab-punkte').style.display = tabName === 'punkte' ? 'block' : 'none';
-            
             document.getElementById('nav-stand').classList.toggle('active', tabName === 'stand');
             document.getElementById('nav-punkte').classList.toggle('active', tabName === 'punkte');
         }
 
-        // ==========================================
-        // 4. AUFGABEN LADEN & PUNKTE EINTRAGEN
-        // ==========================================
         async function loadTasks() {
             const container = document.getElementById('tasks-container');
             const { data: tasks, error } = await supabaseClient.from('wg_tasks').select('*').order('points', { ascending: false });
             
-            if (error) { container.innerHTML = `<p style="color:red">Fehler beim Laden: ${error.message}</p>`; return; }
+            if (error) { container.innerHTML = `<p style="color:red">Fehler: ${error.message}</p>`; return; }
 
             const categories = ['Quick-Wins', 'Core-Tasks', 'Deep-Clean'];
             container.innerHTML = ''; 
@@ -152,7 +138,6 @@
                 const catTasks = tasks.filter(t => t.category === cat);
                 if (catTasks.length > 0) {
                     container.innerHTML += `<div class="category-title">📍 ${cat}</div>`;
-                    
                     catTasks.forEach(task => {
                         const btnHTML = `<button class="task-btn" onclick="savePoints('${task.task}', ${task.points})">
                                             <span>${task.task}</span>
@@ -166,12 +151,7 @@
 
         async function savePoints(taskName, points) {
             const { error } = await supabaseClient.from('wg_points').insert([
-                { 
-                    user_name: currentUser.name, 
-                    team: currentUser.team, 
-                    task: taskName, 
-                    points: points 
-                }
+                { user_name: currentUser.name, team: currentUser.team, task: taskName, points: points }
             ]);
 
             if (error) {
@@ -180,6 +160,75 @@
                 const toast = document.getElementById('toast');
                 toast.style.bottom = '30px';
                 setTimeout(() => { toast.style.bottom = '-50px'; }, 3000);
+                
+                // Diagramm sofort im Hintergrund aktualisieren!
+                loadStandings();
+            }
+        }
+
+        // ==========================================
+        // 5. DIAGRAMM (Stand) BERECHNEN
+        // ==========================================
+        async function loadStandings() {
+            // Zyklus-Logik (wie in deinem Python-Code)
+            const baseDate = new Date('2024-01-01T00:00:00Z');
+            const today = new Date();
+            const diffTime = today - baseDate;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            const cycleNum = Math.floor(diffDays / 14);
+
+            const startDate = new Date(baseDate.getTime() + (cycleNum * 14) * 24 * 60 * 60 * 1000);
+            const endDate = new Date(startDate.getTime() + 13 * 24 * 60 * 60 * 1000);
+            
+            // Formatieren für die Anzeige (z.B. 11.03. - 24.03.)
+            const options = { day: '2-digit', month: '2-digit' };
+            document.getElementById('cycle-info').innerText = `📍 Aktueller Zyklus: ${startDate.toLocaleDateString('de-DE', options)} - ${endDate.toLocaleDateString('de-DE', options)}`;
+
+            // 1. Alle Punkte aus der Datenbank laden
+            const { data: pointsData, error } = await supabaseClient.from('wg_points').select('*');
+            if (error) return;
+
+            // 2. Punkte filtern, die in den aktuellen Zeitraum fallen
+            const currentPoints = pointsData.filter(p => {
+                const pDate = new Date(p.timestamp);
+                return pDate >= startDate && pDate <= new Date(endDate.getTime() + 24*60*60*1000); // Bis Ende des letzten Tages
+            });
+
+            // 3. Punkte pro User & Team zusammenrechnen
+            let userTotals = {};
+            currentPoints.forEach(p => {
+                if (!userTotals[p.user_name]) {
+                    userTotals[p.user_name] = { team: p.team, total: 0 };
+                }
+                userTotals[p.user_name].total += p.points;
+            });
+
+            // 4. Plotly Diagramm aufbauen (Gestapelt nach Team)
+            let plotData = [];
+            for (const [user, info] of Object.entries(userTotals)) {
+                plotData.push({
+                    x: [info.team],
+                    y: [info.total],
+                    name: user,
+                    type: 'bar',
+                    text: [String(info.total)], // Zeigt die Zahl im Balken
+                    textposition: 'auto'
+                });
+            }
+
+            const layout = {
+                barmode: 'stack',
+                margin: { t: 20, l: 30, r: 20, b: 40 },
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                showlegend: true
+            };
+
+            // Falls es keine Punkte gibt, Platzhalter malen
+            if(plotData.length === 0) {
+                document.getElementById('chart-div').innerHTML = "<p style='text-align:center; color:#888; margin-top:50px;'>Noch keine Punkte in diesem Zyklus gesammelt!</p>";
+            } else {
+                Plotly.newPlot('chart-div', plotData, layout, {displayModeBar: false, responsive: true});
             }
         }
     </script>
