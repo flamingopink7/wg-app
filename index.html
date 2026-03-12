@@ -330,4 +330,109 @@
                 document.getElementById('chart-div').innerHTML = "<p style='text-align:center; margin-top:50px;'>Noch keine Punkte!</p>";
             } else {
                 Plotly.newPlot('chart-div', plotData, { barmode: 'stack', margin: { t: 10, l: 30, r: 20, b: 30 }, showlegend: false, xaxis: { categoryorder: 'array', categoryarray: orderedTeams } }, { staticPlot: true, responsive: true });
-                document.getElementById('team-totals-area').innerHTML = orderedTeams.map(t =>
+                document.getElementById('team-totals-area').innerHTML = orderedTeams.map(t => `
+                    <div class="team-total-box">
+                        <div class="team-total-name">Team ${t}</div>
+                        <div class="team-total-score">${teamScores[t]} Pkt</div>
+                        <div class="team-legend">${Array.from(teamMembers[t]).map(u => `<span style="color:${userColors[u]}">●</span> ${u}`).join('<br>')}</div>
+                    </div>`).join('');
+            }
+        }
+
+        function loadRueckblick() {
+            const container = document.getElementById('rueckblick-container');
+            const baseDate = new Date('2024-01-01T00:00:00Z');
+            const currentCycle = Math.floor((new Date() - baseDate) / (1000 * 60 * 60 * 24) / 14);
+            let html = '';
+            for (let i = 1; i <= 5; i++) {
+                const cNum = currentCycle - i; if(cNum < 0) break;
+                const start = new Date(baseDate.getTime() + (cNum * 14) * 86400000);
+                const end = new Date(start.getTime() + 13 * 86400000);
+                const p = allPointsCache.filter(x => { const d = new Date(x.timestamp); return d >= start && d <= new Date(end.getTime() + 86400000); });
+                
+                let s = { 'LiSa': 0, 'SaNi': 0 }; 
+                p.forEach(x => s[x.team] += x.points);
+                
+                let otherTeam = Object.keys(s).find(t => t !== currentUser.team) || (currentUser.team === 'LiSa' ? 'SaNi' : 'LiSa');
+                const myScore = s[currentUser.team] || 0;
+                const otherScore = s[otherTeam] || 0;
+
+                let resultBg = '#f1f3f4'; let resultBorder = '#999'; let resultText = 'Unentschieden'; let resultIcon = '';
+                
+                if (myScore > otherScore) {
+                    resultBg = '#e6f4ea'; resultBorder = '#34a853'; resultText = 'Gewonnen'; resultIcon = './static/010.png';
+                } else if (myScore < otherScore) {
+                    resultBg = '#fce8e6'; resultBorder = '#ea4335'; resultText = 'Verloren'; resultIcon = './static/011.png';
+                }
+
+                let iconHtml = resultIcon ? `<img src="${resultIcon}" style="width: 45px; height: 45px; object-fit: contain;">` : `<span style="font-size: 28px; color: #777;">=</span>`;
+
+                html += `
+                    <div style="background:${resultBg}; padding:15px; border-radius:10px; margin-bottom:12px; border-left:5px solid ${resultBorder}; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
+                        <div style="flex-grow: 1;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 4px;">KW ${getISOWeekNumber(start)}/${getISOWeekNumber(end)}</div>
+                            <div style="font-size: 18px; font-weight: bold; margin-bottom: 6px; color: ${resultBorder};">${resultText}</div>
+                            <div style="font-size: 13px; color: #444; line-height: 1.4;">
+                                <strong>Team ${currentUser.team}: ${myScore} Pkt</strong><br>
+                                Team ${otherTeam}: ${otherScore} Pkt
+                            </div>
+                        </div>
+                        <div style="padding-left: 15px; display: flex; justify-content: center; align-items: center;">
+                            ${iconHtml}
+                        </div>
+                    </div>`;
+            }
+            container.innerHTML = html || 'Noch keine Daten.';
+        }
+
+        function openEditNameModal(id, name) { document.getElementById('modal-title').innerText = "Name ändern"; document.getElementById('modal-edit-type').value = "name"; document.getElementById('modal-task-id').value = id; document.getElementById('modal-input-name').value = name; document.getElementById('modal-input-name').style.display = "block"; document.getElementById('modal-input-points').style.display = "none"; document.getElementById('edit-modal').style.display = "flex"; }
+        function openEditPointsModal(id, points) { document.getElementById('modal-title').innerText = "Punkte ändern"; document.getElementById('modal-edit-type').value = "points"; document.getElementById('modal-task-id').value = id; document.getElementById('modal-input-points').value = points; document.getElementById('modal-input-points').style.display = "block"; document.getElementById('modal-input-name').style.display = "none"; document.getElementById('edit-modal').style.display = "flex"; }
+        function closeModal() { document.getElementById('edit-modal').style.display = "none"; }
+        
+        async function saveModal() {
+            const id = document.getElementById('modal-task-id').value;
+            if(document.getElementById('modal-edit-type').value === "name") await supabaseClient.from('wg_tasks').update({ task: document.getElementById('modal-input-name').value }).eq('id', id);
+            else await supabaseClient.from('wg_tasks').update({ points: parseInt(document.getElementById('modal-input-points').value) }).eq('id', id);
+            closeModal(); loadAdminTasks(); loadTasksAccordion();
+        }
+
+        async function loadAdminTasks() {
+            const container = document.getElementById('admin-tasks-container');
+            const { data: tasks } = await supabaseClient.from('wg_tasks').select('*');
+            const categories = ['Quick-Wins', 'Core-Tasks', 'Deep-Clean'];
+            container.innerHTML = '';
+            categories.forEach((cat, index) => {
+                const catTasks = tasks.filter(t => t.category === cat).sort((a, b) => a.points - b.points);
+                let html = `<div class="accordion"><div class="accordion-header" onclick="toggleAccordion('admin-cat-${index}')"><span style="display:flex; align-items:center;"><img src="./static/008.png" class="emoji-icon"> ${cat}</span> <span>▼</span></div><div class="accordion-content" id="admin-cat-${index}">`;
+                catTasks.forEach(task => {
+                    html += `<div class="admin-task-item" style="display:flex; justify-content:space-between; align-items:center; background:white; padding:10px; border-radius:8px; margin-bottom:5px; border:1px solid #ddd;">
+                        <div><strong>${task.task}</strong><br><small>${task.points} Pkt</small></div>
+                        <div style="display:flex; gap:5px;">
+                            <button class="btn-edit" onclick="openEditNameModal(${task.id}, '${task.task.replace(/'/g, "\\'")}')"><img src="./static/014.png" class="action-icon"></button>
+                            <button class="btn-edit" onclick="openEditPointsModal(${task.id}, ${task.points})"><img src="./static/015.png" class="action-icon"></button>
+                            <button class="btn-danger" onclick="deleteTask(${task.id})"><img src="./static/009.png" class="delete-icon"></button>
+                        </div></div>`;
+                });
+                container.innerHTML += html + `</div></div>`;
+            });
+        }
+        
+        async function addNewTask() {
+            await supabaseClient.from('wg_tasks').insert([{ category: document.getElementById('new-cat').value, task: document.getElementById('new-task').value, points: parseInt(document.getElementById('new-points').value) }]);
+            loadAdminTasks(); loadTasksAccordion();
+        }
+        async function deleteTask(id) { if(confirm("Löschen?")) { await supabaseClient.from('wg_tasks').delete().eq('id', id); loadAdminTasks(); loadTasksAccordion(); } }
+
+        // NEU: Service Worker Registrierung (sauber im bestehenden Skript eingebunden)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').then(reg => {
+                    console.log('Service Worker registriert!');
+                }).catch(err => {
+                    console.log('Service Worker Fehler:', err);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
