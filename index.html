@@ -426,23 +426,33 @@
             const baseDate = new Date('2024-01-01T00:00:00Z');
             const currentCycle = Math.floor((new Date() - baseDate) / (1000 * 60 * 60 * 24) / 14);
             let html = '';
-            for (let i = 1; i <= 5; i++) {
+            
+            // HIER GEÄNDERT: i <= 10 statt i <= 5 (Zeigt jetzt die letzten 10 Zyklen an)
+            for (let i = 1; i <= 10; i++) {
                 const cNum = currentCycle - i; if(cNum < 0) break;
                 const start = new Date(baseDate.getTime() + (cNum * 14) * 86400000);
                 const end = new Date(start.getTime() + 13 * 86400000);
                 const p = allPointsCache.filter(x => { const d = new Date(x.timestamp); return d >= start && d <= new Date(end.getTime() + 86400000); });
+                
                 let s = { 'LiSa': 0, 'SaNi': 0 }; p.forEach(x => s[x.team] += x.points);
                 let otherTeam = currentUser.team === 'LiSa' ? 'SaNi' : 'LiSa';
                 const myScore = s[currentUser.team] || 0; const otherScore = s[otherTeam] || 0;
+                
                 let resultBg = '#f1f3f4', resultBorder = '#999', resultText = 'Unentschieden', resultIcon = '';
                 if (myScore > otherScore) { resultBg = '#e6f4ea'; resultBorder = '#34a853'; resultText = 'Gewonnen'; resultIcon = './static/010.png'; } 
                 else if (myScore < otherScore) { resultBg = '#fce8e6'; resultBorder = '#ea4335'; resultText = 'Verloren'; resultIcon = './static/011.png'; }
+                
                 let iconHtml = resultIcon ? `<img src="${resultIcon}" style="width: 45px; height: 45px; object-fit: contain;">` : `<span style="font-size: 28px; color: #777;">=</span>`;
-                html += `<div style="background:${resultBg}; padding:15px; border-radius:10px; margin-bottom:12px; border-left:5px solid ${resultBorder}; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;"><div style="flex-grow: 1;"><div style="font-size: 12px; color: #666; margin-bottom: 4px;">KW ${getISOWeekNumber(start)}/${getISOWeekNumber(end)}</div><div style="font-size: 18px; font-weight: bold; margin-bottom: 6px; color: ${resultBorder};">${resultText}</div><div style="font-size: 13px; color: #444; line-height: 1.4;"><strong>Team ${currentUser.team}: ${myScore} Pkt</strong><br>Team ${otherTeam}: ${otherScore} Pkt</div></div><div style="padding-left: 15px; display: flex; justify-content: center; align-items: center;">${iconHtml}</div></div>`;
+                
+                // HIER GEÄNDERT: Datum-String generiert (z.B. 12.03. - 25.03.)
+                const dateString = `${start.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'})} - ${end.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'})}`;
+                
+                // HIER GEÄNDERT: Den dateString neben die KW ins HTML eingebaut
+                html += `<div style="background:${resultBg}; padding:15px; border-radius:10px; margin-bottom:12px; border-left:5px solid ${resultBorder}; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;"><div style="flex-grow: 1;"><div style="font-size: 12px; color: #666; margin-bottom: 4px;">KW ${getISOWeekNumber(start)}/${getISOWeekNumber(end)} (${dateString})</div><div style="font-size: 18px; font-weight: bold; margin-bottom: 6px; color: ${resultBorder};">${resultText}</div><div style="font-size: 13px; color: #444; line-height: 1.4;"><strong>Team ${currentUser.team}: ${myScore} Pkt</strong><br>Team ${otherTeam}: ${otherScore} Pkt</div></div><div style="padding-left: 15px; display: flex; justify-content: center; align-items: center;">${iconHtml}</div></div>`;
             }
             container.innerHTML = html || 'Noch keine Daten.';
         }
-
+        
         function openEditNameModal(id, encodedName, cd, cdType) { 
             const name = decodeURIComponent(encodedName);
             document.getElementById('modal-title').innerText = "Aufgabe & Zeit anpassen";
