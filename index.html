@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>WG App</title>
     <link rel="manifest" href="./manifest.json" />
     <link rel="icon" href="./static/icon.png" />
@@ -12,17 +12,18 @@
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     
     <style>
-        body { font-family: sans-serif; background-color: #f0f2f6; margin: 0; color: #31333F; height: 100vh; overflow: hidden; }
+        /* NEU: touch-action verhindert unerwünschtes Zoomen (Pinch-to-zoom) */
+        body { font-family: sans-serif; background-color: #f0f2f6; margin: 0; color: #31333F; height: 100vh; overflow: hidden; touch-action: pan-y; }
         
         /* Login */
         #login-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; padding: 20px; }
-        .login-box { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); width: 100%; max-width: 400px; }
-        input, select { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; background-color: white; }
+        .login-box { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); width: 100%; max-width: 400px; text-align: center; }
+        input, select { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; background-color: white; touch-action: manipulation; }
         
-        .btn-primary { width: 100%; min-height: 50px; background-color: #FF4B4B; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; }
+        .btn-primary { width: 100%; min-height: 50px; background-color: #FF4B4B; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; touch-action: manipulation; }
         .btn-primary:active { transform: scale(0.98); background-color: #e04343; }
-        .btn-danger { background-color: #ffeaea; color: #dc3545; border: 1px solid #dc3545; border-radius: 6px; padding: 6px 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .btn-edit { background-color: #e8f4f8; color: #007acc; border: 1px solid #007acc; border-radius: 6px; padding: 6px 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .btn-danger { background-color: #ffeaea; color: #dc3545; border: 1px solid #dc3545; border-radius: 6px; padding: 6px 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; touch-action: manipulation; }
+        .btn-edit { background-color: #e8f4f8; color: #007acc; border: 1px solid #007acc; border-radius: 6px; padding: 6px 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; touch-action: manipulation; }
         
         /* Icon Styling */
         .emoji-icon { height: 1.1em; width: 1.1em; vertical-align: middle; margin-right: 5px; }
@@ -34,12 +35,12 @@
         
         /* Top Header */
         .top-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 20px 10px 20px; background-color: transparent; }
-        .logout-btn { background: transparent; border: none; cursor: pointer; padding: 5px; border-radius: 50%; }
+        .logout-btn { background: transparent; border: none; cursor: pointer; padding: 5px; border-radius: 50%; touch-action: manipulation; }
         .logout-btn img { width: 28px; height: 28px; object-fit: contain; }
         
         /* Navigation */
         .bottom-nav { width: 100%; height: 80px; background-color: #e0e2e6; display: flex; justify-content: space-around; align-items: center; position: fixed; bottom: 0; left: 0; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
-        .nav-btn { width: 50px; height: 50px; border-radius: 12px; border: none; background: transparent; cursor: pointer; padding: 6px; display: flex; justify-content: center; align-items: center; }
+        .nav-btn { width: 50px; height: 50px; border-radius: 12px; border: none; background: transparent; cursor: pointer; padding: 6px; display: flex; justify-content: center; align-items: center; touch-action: manipulation; }
         .nav-btn img { width: 100%; height: 100%; object-fit: contain; }
         .nav-btn.active { background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         
@@ -48,9 +49,9 @@
         
         /* Accordion */
         .accordion { background-color: white; border-radius: 10px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden; }
-        .accordion-header { background-color: white; padding: 18px 20px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .accordion-header { background-color: white; padding: 18px 20px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; touch-action: manipulation; }
         .accordion-content { display: none; padding: 10px 20px 20px 20px; background-color: #fcfcfc; border-top: 1px solid #eee; }
-        .task-btn { width: 100%; min-height: 55px; border-radius: 8px; background: white; border: 1px solid #ddd; margin-bottom: 8px; text-align: left; padding: 0 15px; display: flex; justify-content: space-between; align-items: center; }
+        .task-btn { width: 100%; min-height: 55px; border-radius: 8px; background: white; border: 1px solid #ddd; margin-bottom: 8px; text-align: left; padding: 0 15px; display: flex; justify-content: space-between; align-items: center; touch-action: manipulation; }
         
         /* Dashboard */
         .team-totals-container { display: flex; justify-content: space-between; gap: 10px; margin-top: 10px; flex-wrap: nowrap; }
@@ -76,7 +77,7 @@
             <input type="text" id="modal-input-name" placeholder="Neuer Name" style="display:none;">
             <input type="number" id="modal-input-points" placeholder="Neue Punkte" style="display:none;">
             <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
-                <button class="btn-cancel" onclick="closeModal()" style="border:none; background:#f0f2f6; padding:10px 15px; border-radius:8px;">Abbrechen</button>
+                <button class="btn-cancel" onclick="closeModal()" style="border:none; background:#f0f2f6; padding:10px 15px; border-radius:8px; font-weight:bold; cursor:pointer;">Abbrechen</button>
                 <button class="btn-primary" style="width:auto; min-height:40px; padding:0 20px;" onclick="saveModal()">Speichern</button>
             </div>
         </div>
@@ -84,7 +85,8 @@
 
     <div id="login-screen">
         <div class="login-box">
-            <h1 style="text-align: center;">WG Login</h1>
+            <img src="./static/007.png" alt="WG Logo" style="width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px;">
+            <h2 style="margin-top: 0;">WG Login</h2>
             <input type="text" id="username" placeholder="Name">
             <input type="password" id="password" placeholder="Passwort">
             <button class="btn-primary" onclick="login()">Anmelden</button>
@@ -194,13 +196,12 @@
             loadTasksAccordion(); loadStandings(); loadHistory(); loadRueckblick();
             if(currentUser.is_admin) loadAdminTasks();
             
-            // Stellt sicher, dass das Diagramm direkt beim Start perfekt skaliert wird
             setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
         }
 
         function logout() {
             localStorage.removeItem('wg_user');
-            location.reload(); // Lädt die Seite sauber neu, sodass man wieder auf der Login/Startseite landet
+            location.reload(); 
         }
 
         function switchTab(tabName) {
@@ -227,7 +228,7 @@
             container.innerHTML = '';
             categories.forEach((cat, index) => {
                 const catTasks = tasks.filter(t => t.category === cat).sort((a, b) => a.points - b.points);
-                let html = `<div class="accordion"><div class="accordion-header" onclick="toggleAccordion('cat-${index}')"><span><img src="./static/008.png" class="emoji-icon"> ${cat}</span> <span>▼</span></div><div class="accordion-content" id="cat-${index}">`;
+                let html = `<div class="accordion"><div class="accordion-header" onclick="toggleAccordion('cat-${index}')"><span style="display:flex; align-items:center;"><img src="./static/008.png" class="emoji-icon"> ${cat}</span> <span>▼</span></div><div class="accordion-content" id="cat-${index}">`;
                 catTasks.forEach(task => {
                     html += `<button class="task-btn" onclick="savePoints('${task.task.replace(/'/g, "\\'")}', ${task.points})"><span>${task.task}</span><span style="color:#FF4B4B; font-weight:bold;">${task.points}P</span></button>`;
                 });
@@ -249,15 +250,35 @@
             loadStandings(); loadHistory();
         }
 
+        // ==========================================
+        // NEU: ÜBERSICHTLICHER VERLAUF (Limit 15)
+        // ==========================================
         function loadHistory() {
             const container = document.getElementById('history-container');
-            const history = [...allPointsCache].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 30);
-            container.innerHTML = history.map(item => `
-                <div class="history-item">
-                    <div><div class="history-date">${new Date(item.timestamp).toLocaleString('de-DE')}</div>
-                    <strong>${item.user_name}</strong>: ${item.task} (+${item.points})</div>
-                    ${(currentUser.is_admin || item.user_name === currentUser.name) ? `<button class="btn-danger" onclick="deleteHistoryPoint(${item.id})"><img src="./static/009.png" class="delete-icon"></button>` : ''}
-                </div>`).join('');
+            // Hier auf 15 limitiert
+            const history = [...allPointsCache].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 15);
+            
+            if (history.length === 0) { container.innerHTML = "Keine Aktivitäten."; return; }
+            
+            container.innerHTML = history.map(item => {
+                const dateObj = new Date(item.timestamp);
+                const timeStr = `${dateObj.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'})} - ${dateObj.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'})}`;
+                const canDelete = currentUser.is_admin || item.user_name === currentUser.name;
+                const deleteBtn = canDelete ? `<button class="btn-danger" style="padding: 8px;" onclick="deleteHistoryPoint(${item.id})"><img src="./static/009.png" class="delete-icon"></button>` : '';
+                const userColor = userColors[item.user_name] || '#ccc'; // Teamfarbe für den seitlichen Balken
+
+                return `
+                <div class="history-item" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 15px; background: white; border-radius: 10px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-left: 5px solid ${userColor};">
+                    <div style="flex-grow: 1; padding-right: 15px;">
+                        <div style="font-size: 11px; color: #888; margin-bottom: 4px;">${timeStr} Uhr</div>
+                        <div style="font-size: 14px; line-height: 1.4;"><strong>${item.user_name}</strong><br><span style="color: #444;">${item.task}</span></div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="color: #FF4B4B; font-weight: bold; font-size: 16px;">+${item.points}</div>
+                        ${deleteBtn}
+                    </div>
+                </div>`;
+            }).join('');
         }
 
         async function deleteHistoryPoint(id) {
@@ -295,7 +316,6 @@
             if(plotData.length === 0) {
                 document.getElementById('chart-div').innerHTML = "<p style='text-align:center; margin-top:50px;'>Noch keine Punkte!</p>";
             } else {
-                // WICHTIG: responsive: true wurde hinzugefügt, um horizontales Scrollen auf Mobilen Geräten zu verhindern
                 Plotly.newPlot('chart-div', plotData, { barmode: 'stack', margin: { t: 10, l: 30, r: 20, b: 30 }, showlegend: false, xaxis: { categoryorder: 'array', categoryarray: orderedTeams } }, { staticPlot: true, responsive: true });
                 document.getElementById('team-totals-area').innerHTML = orderedTeams.map(t => `
                     <div class="team-total-box">
@@ -306,6 +326,9 @@
             }
         }
 
+        // ==========================================
+        // NEU: RÜCKBLICK (Ohne Emoji, "Unentschieden")
+        // ==========================================
         function loadRueckblick() {
             const container = document.getElementById('rueckblick-container');
             const baseDate = new Date('2024-01-01T00:00:00Z');
@@ -319,18 +342,18 @@
                 let s = { 'LiSa': 0, 'SaNi': 0 }; p.forEach(x => s[x.team] += x.points);
                 const win = s[currentUser.team] > s[Object.keys(s).find(t => t !== currentUser.team)];
                 const lose = s[currentUser.team] < s[Object.keys(s).find(t => t !== currentUser.team)];
-                const status = win ? `<img src="./static/010.png" class="emoji-icon"> Gewonnen` : (lose ? `<img src="./static/011.png" class="emoji-icon"> Verloren` : '🤝 Remis');
+                const status = win ? `<img src="./static/010.png" class="emoji-icon"> Gewonnen` : (lose ? `<img src="./static/011.png" class="emoji-icon"> Verloren` : 'Unentschieden'); // Remis ersetzt!
                 html += `<div style="background:${win ? '#e6f4ea' : (lose ? '#fce8e6' : '#f1f3f4')}; padding:15px; border-radius:10px; margin-bottom:10px; border-left:5px solid ${win ? '#34a853' : (lose ? '#ea4335' : '#999')}">
-                    <small>KW ${getISOWeekNumber(start)}/${getISOWeekNumber(end)}</small><br><strong style="display:flex; align-items:center;">${status}</strong><br>
-                    <small>Team ${currentUser.team}: ${s[currentUser.team]} Pkt | Gegenteam: ${s[Object.keys(s).find(t => t !== currentUser.team)]} Pkt</small></div>`;
+                    <small>KW ${getISOWeekNumber(start)}/${getISOWeekNumber(end)}</small><br><strong style="display:flex; align-items:center; margin: 4px 0;">${status}</strong>
+                    <small style="color: #444;">Team ${currentUser.team}: ${s[currentUser.team]} Pkt | Gegenteam: ${s[Object.keys(s).find(t => t !== currentUser.team)]} Pkt</small></div>`;
             }
             container.innerHTML = html || 'Noch keine Daten.';
         }
 
-        // ADMIN MODALS
         function openEditNameModal(id, name) { document.getElementById('modal-title').innerText = "Name ändern"; document.getElementById('modal-edit-type').value = "name"; document.getElementById('modal-task-id').value = id; document.getElementById('modal-input-name').value = name; document.getElementById('modal-input-name').style.display = "block"; document.getElementById('modal-input-points').style.display = "none"; document.getElementById('edit-modal').style.display = "flex"; }
         function openEditPointsModal(id, points) { document.getElementById('modal-title').innerText = "Punkte ändern"; document.getElementById('modal-edit-type').value = "points"; document.getElementById('modal-task-id').value = id; document.getElementById('modal-input-points').value = points; document.getElementById('modal-input-points').style.display = "block"; document.getElementById('modal-input-name').style.display = "none"; document.getElementById('edit-modal').style.display = "flex"; }
         function closeModal() { document.getElementById('edit-modal').style.display = "none"; }
+        
         async function saveModal() {
             const id = document.getElementById('modal-task-id').value;
             if(document.getElementById('modal-edit-type').value === "name") await supabaseClient.from('wg_tasks').update({ task: document.getElementById('modal-input-name').value }).eq('id', id);
@@ -345,7 +368,7 @@
             container.innerHTML = '';
             categories.forEach((cat, index) => {
                 const catTasks = tasks.filter(t => t.category === cat).sort((a, b) => a.points - b.points);
-                let html = `<div class="accordion"><div class="accordion-header" onclick="toggleAccordion('admin-cat-${index}')"><span><img src="./static/008.png" class="emoji-icon"> ${cat}</span> <span>▼</span></div><div class="accordion-content" id="admin-cat-${index}">`;
+                let html = `<div class="accordion"><div class="accordion-header" onclick="toggleAccordion('admin-cat-${index}')"><span style="display:flex; align-items:center;"><img src="./static/008.png" class="emoji-icon"> ${cat}</span> <span>▼</span></div><div class="accordion-content" id="admin-cat-${index}">`;
                 catTasks.forEach(task => {
                     html += `<div class="admin-task-item" style="display:flex; justify-content:space-between; align-items:center; background:white; padding:10px; border-radius:8px; margin-bottom:5px; border:1px solid #ddd;">
                         <div><strong>${task.task}</strong><br><small>${task.points} Pkt</small></div>
@@ -358,6 +381,7 @@
                 container.innerHTML += html + `</div></div>`;
             });
         }
+        
         async function addNewTask() {
             await supabaseClient.from('wg_tasks').insert([{ category: document.getElementById('new-cat').value, task: document.getElementById('new-task').value, points: parseInt(document.getElementById('new-points').value) }]);
             loadAdminTasks(); loadTasksAccordion();
