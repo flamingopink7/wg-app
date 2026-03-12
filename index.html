@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>WG App v26</title>
+    <title>WG App v28</title>
     <link rel="manifest" href="./manifest.json" />
     <link rel="icon" href="./static/icon.png" />
     <link rel="apple-touch-icon" href="./static/icon.png" />
@@ -44,7 +44,7 @@
         .accordion { background-color: white; border-radius: 10px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden; }
         .accordion-header { background-color: white; padding: 18px 20px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; touch-action: manipulation; }
         .accordion-content { display: none; padding: 10px 20px 20px 20px; background-color: #fcfcfc; border-top: 1px solid #eee; }
-        .task-btn { width: 100%; min-height: 55px; border-radius: 8px; background: white; border: 1px solid #ddd; margin-bottom: 8px; text-align: left; padding: 0 15px; display: flex; justify-content: space-between; align-items: center; touch-action: manipulation; transition: 0.3s; }
+        .task-btn { width: 100%; min-height: 55px; border-radius: 8px; background: white; border: 1px solid #ddd; margin-bottom: 8px; text-align: left; padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; touch-action: manipulation; transition: 0.3s; }
         
         .team-totals-container { display: flex; justify-content: space-between; gap: 10px; margin-top: 10px; flex-wrap: nowrap; }
         .team-total-box { flex: 1; background: white; padding: 15px 10px; border-radius: 12px; text-align: center; border-bottom: 4px solid #FF4B4B; min-width: 0; }
@@ -269,15 +269,28 @@
                     let isLocked = false;
                     let timeRemainingStr = "";
                     let btnStyle = "";
-                    let clickAction = `onclick="savePoints('${task.task.replace(/'/g, "\\'")}', ${task.points})"`;
+                    
+                    let clickAction = `onclick="savePoints('${encodeURIComponent(task.task)}', ${task.points})"`;
+
+                    // --- NEU: Wer hat es wann zuletzt gemacht? ---
+                    let lastDoneStr = "<span style='font-size: 11px; color: #aaa; font-weight: normal; margin-top: 4px;'>Noch nie erledigt</span>";
+                    let allPointsForThisTask = allPointsCache.filter(p => p.task === task.task);
+                    allPointsForThisTask.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    
+                    if (allPointsForThisTask.length > 0) {
+                        const lastEntry = allPointsForThisTask[0];
+                        const lastDate = new Date(lastEntry.timestamp);
+                        const timeStr = `${lastDate.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'})} - ${lastDate.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'})}`;
+                        lastDoneStr = `<span style='font-size: 11px; color: #888; font-weight: normal; margin-top: 4px;'>Zuletzt: ${lastEntry.user_name} (${timeStr})</span>`;
+                    }
+                    // ---------------------------------------------
 
                     if (task.cooldown_minutes && task.cooldown_minutes > 0) {
-                        let relevantPoints = allPointsCache.filter(p => p.task === task.task);
+                        // Für den Cooldown müssen wir schauen, ob es ALLE oder NUR DEN USER betrifft
+                        let relevantPoints = allPointsForThisTask;
                         if (task.cooldown_type === 'user') {
                             relevantPoints = relevantPoints.filter(p => p.user_name === currentUser.name);
                         }
-                        
-                        relevantPoints.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
                         
                         if (relevantPoints.length > 0) {
                             const lastDoneTime = new Date(relevantPoints[0].timestamp);
@@ -296,9 +309,11 @@
                         }
                     }
 
+                    // Wir bauen den Button jetzt mit einer flexiblen linken und rechten Seite auf
                     let rightSide = isLocked ? `<span style="color:#777; font-weight:bold; font-size:13px;">${timeRemainingStr}</span>` : `<span style="color:#FF4B4B; font-weight:bold;">${task.points}P</span>`;
+                    let leftSide = `<div style="display:flex; flex-direction:column; align-items:flex-start;"><span>${task.task}</span>${lastDoneStr}</div>`;
 
-                    html += `<button class="task-btn" style="${btnStyle}" ${clickAction}><span>${task.task}</span>${rightSide}</button>`;
+                    html += `<button class="task-btn" style="${btnStyle}" ${clickAction}>${leftSide}${rightSide}</button>`;
                 });
                 html += `</div></div>`;
             });
@@ -313,7 +328,8 @@
 
         function toggleAccordion(id) { const el = document.getElementById(id); el.style.display = (el.style.display === "block") ? "none" : "block"; }
 
-        async function savePoints(taskName, points) {
+        async function savePoints(encodedTaskName, points) {
+            const taskName = decodeURIComponent(encodedTaskName);
             await supabaseClient.from('wg_points').insert([{ user_name: currentUser.name, team: currentUser.team, task: taskName, points: points }]);
             const toast = document.getElementById('toast');
             toast.style.opacity = '1'; setTimeout(() => toast.style.opacity = '0', 3000);
@@ -387,7 +403,8 @@
             container.innerHTML = html || 'Noch keine Daten.';
         }
 
-        function openEditNameModal(id, name, cd, cdType) { 
+        function openEditNameModal(id, encodedName, cd, cdType) { 
+            const name = decodeURIComponent(encodedName);
             document.getElementById('modal-title').innerText = "Aufgabe & Zeit anpassen";
             document.getElementById('modal-edit-type').value = "name_cd";
             document.getElementById('modal-task-id').value = id; 
@@ -453,7 +470,7 @@
                     html += `<div class="admin-task-item" style="display:flex; justify-content:space-between; align-items:center; background:white; padding:10px; border-radius:8px; margin-bottom:5px; border:1px solid #ddd;">
                         <div><strong>${task.task}</strong><br><small>${task.points} Pkt</small></div>
                         <div style="display:flex; gap:5px;">
-                            <button class="btn-edit" onclick="openEditNameModal(${task.id}, '${task.task.replace(/'/g, "\\'")}', ${safeCd}, '${safeCdType}')"><img src="./static/014.png" class="action-icon"></button>
+                            <button class="btn-edit" onclick="openEditNameModal(${task.id}, '${encodeURIComponent(task.task)}', ${safeCd}, '${safeCdType}')"><img src="./static/014.png" class="action-icon"></button>
                             <button class="btn-edit" onclick="openEditPointsModal(${task.id}, ${task.points})"><img src="./static/015.png" class="action-icon"></button>
                             <button class="btn-danger" onclick="deleteTask(${task.id})"><img src="./static/009.png" class="delete-icon"></button>
                         </div></div>`;
