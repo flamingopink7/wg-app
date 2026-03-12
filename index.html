@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>WG App v18</title>
+    <title>WG App v19</title>
     <link rel="manifest" href="./manifest.json" />
     <link rel="icon" href="./static/icon.png" />
     <link rel="apple-touch-icon" href="./static/icon.png" />
@@ -12,8 +12,7 @@
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     
     <style>
-        /* touch-action hilft bei Android, JS weiter unten hilft bei iOS */
-        body { font-family: sans-serif; background-color: #f0f2f6; margin: 0; color: #31333F; height: 100vh; overflow: hidden; touch-action: pan-y; }
+        body { font-family: sans-serif; background-color: #f0f2f6; margin: 0; color: #31333F; height: 100vh; overflow: hidden; touch-action: pan-x pan-y; }
         
         /* Login */
         #login-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; padding: 20px; }
@@ -44,7 +43,7 @@
         .nav-btn img { width: 100%; height: 100%; object-fit: contain; }
         .nav-btn.active { background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         
-        /* Content Area */
+        /* Content Area (Wird nun dynamisch via JS gesperrt) */
         .content { flex-grow: 1; padding: 0 20px 100px 20px; overflow-y: auto; box-sizing: border-box; }
         
         /* Accordion */
@@ -102,7 +101,7 @@
             </button>
         </div>
 
-        <div class="content">
+        <div class="content" id="main-content">
             <div id="tab-stand">
                 <div id="cycle-info" class="info-box" style="margin-top: 10px; text-align: center;">Lade Zyklus...</div>
                 <div id="chart-div" style="width:100%; height:380px;"></div>
@@ -154,18 +153,25 @@
     <div id="toast">✅ Gespeichert!</div>
 
     <script>
-        // --- NEU: JS-Hacks um Zoom auf iOS Safari komplett zu blockieren ---
+        // Zoom-Fix (Korrigiert für Android/iOS Konflikte)
         document.addEventListener('touchmove', function (event) {
-            if (event.scale !== 1) { event.preventDefault(); }
+            // scale existiert nur in iOS Safari. Bei Android ist es undefined.
+            if (event.scale !== undefined && event.scale !== 1) { 
+                event.preventDefault(); 
+            }
         }, { passive: false });
 
         let lastTouchEnd = 0;
         document.addEventListener('touchend', function (event) {
             const now = (new Date()).getTime();
-            if (now - lastTouchEnd <= 300) { event.preventDefault(); }
+            if (now - lastTouchEnd <= 300) { 
+                // Blockt Doppeltipp-Zoom, erlaubt aber Buttons (wegen touch-action im CSS)
+                if(!event.target.closest('button') && !event.target.closest('input') && !event.target.closest('.accordion-header')) {
+                    event.preventDefault(); 
+                }
+            }
             lastTouchEnd = now;
         }, { passive: false });
-        // ------------------------------------------------------------------
 
         const SUPABASE_URL = 'https://ckghuvwtafygmlxaylyi.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_AvT0AGUjHlmgWlrIZDD3Ng_JliBmjY-';
@@ -204,12 +210,15 @@
             document.getElementById('app-screen').style.display = 'flex';
             document.getElementById('welcome-text').innerText = `Hallo ${currentUser.name}`;
             if (currentUser.is_admin) document.getElementById('nav-admin').style.display = 'flex';
+            
             const { data } = await supabaseClient.from('wg_points').select('*');
             if(data) allPointsCache = data;
+            
             loadTasksAccordion(); loadStandings(); loadHistory(); loadRueckblick();
             if(currentUser.is_admin) loadAdminTasks();
             
-            setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
+            // Startet immer im Dashboard Tab (sperrt das Scrollen)
+            switchTab('stand');
         }
 
         function logout() {
@@ -219,11 +228,20 @@
 
         function switchTab(tabName) {
             const tabs = ['stand', 'punkte', 'verlauf', 'rueckblick', 'admin'];
+            const contentArea = document.getElementById('main-content');
+            
             tabs.forEach(t => {
                 document.getElementById(`tab-${t}`).style.display = t === tabName ? 'block' : 'none';
                 document.getElementById(`nav-${t}`).classList.toggle('active', t === tabName);
             });
-            if(tabName === 'stand') setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
+            
+            // DYNAMISCHE SCROLL-SPERRE
+            if(tabName === 'stand') {
+                contentArea.style.overflowY = 'hidden'; // Sperrt Scrollen im Dashboard
+                setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
+            } else {
+                contentArea.style.overflowY = 'auto'; // Erlaubt Scrollen überall sonst
+            }
         }
 
         function getISOWeekNumber(d) {
@@ -335,9 +353,6 @@
             }
         }
 
-        // ==========================================
-        // NEU: RÜCKBLICK (Icon groß auf der rechten Seite)
-        // ==========================================
         function loadRueckblick() {
             const container = document.getElementById('rueckblick-container');
             const baseDate = new Date('2024-01-01T00:00:00Z');
@@ -364,7 +379,6 @@
                     resultBg = '#fce8e6'; resultBorder = '#ea4335'; resultText = 'Verloren'; resultIcon = './static/011.png';
                 }
 
-                // Generiere das Bild-HTML oder lass es leer, wenn unentschieden
                 let iconHtml = resultIcon ? `<img src="${resultIcon}" style="width: 45px; height: 45px; object-fit: contain;">` : `<span style="font-size: 28px; color: #777;">=</span>`;
 
                 html += `
