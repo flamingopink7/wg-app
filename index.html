@@ -101,13 +101,13 @@
         </div>
 
         <div class="content">
-            <div id="tab-stand" style="display: none;">
+            <div id="tab-stand">
                 <div id="cycle-info" class="info-box" style="margin-top: 10px; text-align: center;">Lade Zyklus...</div>
                 <div id="chart-div" style="width:100%; height:380px;"></div>
                 <div id="team-totals-area" class="team-totals-container"></div>
             </div>
             
-            <div id="tab-punkte">
+            <div id="tab-punkte" style="display: none;">
                 <h3>Punkte eintragen</h3>
                 <div id="accordion-container"><i>Lade Aufgaben...</i></div>
             </div>
@@ -141,8 +141,8 @@
         </div>
 
         <div class="bottom-nav">
-            <button class="nav-btn" id="nav-stand" onclick="switchTab('stand')"><img src="./static/001.png"></button>
-            <button class="nav-btn active" id="nav-punkte" onclick="switchTab('punkte')"><img src="./static/002.png"></button>
+            <button class="nav-btn active" id="nav-stand" onclick="switchTab('stand')"><img src="./static/001.png"></button>
+            <button class="nav-btn" id="nav-punkte" onclick="switchTab('punkte')"><img src="./static/002.png"></button>
             <button class="nav-btn" id="nav-verlauf" onclick="switchTab('verlauf')"><img src="./static/icon.png"></button>
             <button class="nav-btn" id="nav-rueckblick" onclick="switchTab('rueckblick')"><img src="./static/006.png"></button>
             <button class="nav-btn" id="nav-admin" onclick="switchTab('admin')" style="display: none;"><img src="./static/003.png"></button>
@@ -193,11 +193,14 @@
             if(data) allPointsCache = data;
             loadTasksAccordion(); loadStandings(); loadHistory(); loadRueckblick();
             if(currentUser.is_admin) loadAdminTasks();
+            
+            // Stellt sicher, dass das Diagramm direkt beim Start perfekt skaliert wird
+            setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
         }
 
         function logout() {
             localStorage.removeItem('wg_user');
-            location.reload();
+            location.reload(); // Lädt die Seite sauber neu, sodass man wieder auf der Login/Startseite landet
         }
 
         function switchTab(tabName) {
@@ -292,7 +295,8 @@
             if(plotData.length === 0) {
                 document.getElementById('chart-div').innerHTML = "<p style='text-align:center; margin-top:50px;'>Noch keine Punkte!</p>";
             } else {
-                Plotly.newPlot('chart-div', plotData, { barmode: 'stack', margin: { t: 10, l: 30, r: 20, b: 30 }, showlegend: false, xaxis: { categoryorder: 'array', categoryarray: orderedTeams } }, { staticPlot: true });
+                // WICHTIG: responsive: true wurde hinzugefügt, um horizontales Scrollen auf Mobilen Geräten zu verhindern
+                Plotly.newPlot('chart-div', plotData, { barmode: 'stack', margin: { t: 10, l: 30, r: 20, b: 30 }, showlegend: false, xaxis: { categoryorder: 'array', categoryarray: orderedTeams } }, { staticPlot: true, responsive: true });
                 document.getElementById('team-totals-area').innerHTML = orderedTeams.map(t => `
                     <div class="team-total-box">
                         <div class="team-total-name">Team ${t}</div>
