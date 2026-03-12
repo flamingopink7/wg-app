@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>WG App</title>
+    <title>WG App v18</title>
     <link rel="manifest" href="./manifest.json" />
     <link rel="icon" href="./static/icon.png" />
     <link rel="apple-touch-icon" href="./static/icon.png" />
@@ -12,7 +12,7 @@
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     
     <style>
-        /* NEU: touch-action verhindert unerwünschtes Zoomen (Pinch-to-zoom) */
+        /* touch-action hilft bei Android, JS weiter unten hilft bei iOS */
         body { font-family: sans-serif; background-color: #f0f2f6; margin: 0; color: #31333F; height: 100vh; overflow: hidden; touch-action: pan-y; }
         
         /* Login */
@@ -154,6 +154,19 @@
     <div id="toast">✅ Gespeichert!</div>
 
     <script>
+        // --- NEU: JS-Hacks um Zoom auf iOS Safari komplett zu blockieren ---
+        document.addEventListener('touchmove', function (event) {
+            if (event.scale !== 1) { event.preventDefault(); }
+        }, { passive: false });
+
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) { event.preventDefault(); }
+            lastTouchEnd = now;
+        }, { passive: false });
+        // ------------------------------------------------------------------
+
         const SUPABASE_URL = 'https://ckghuvwtafygmlxaylyi.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_AvT0AGUjHlmgWlrIZDD3Ng_JliBmjY-';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -250,12 +263,8 @@
             loadStandings(); loadHistory();
         }
 
-        // ==========================================
-        // NEU: ÜBERSICHTLICHER VERLAUF (Limit 15)
-        // ==========================================
         function loadHistory() {
             const container = document.getElementById('history-container');
-            // Hier auf 15 limitiert
             const history = [...allPointsCache].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 15);
             
             if (history.length === 0) { container.innerHTML = "Keine Aktivitäten."; return; }
@@ -265,7 +274,7 @@
                 const timeStr = `${dateObj.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'})} - ${dateObj.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'})}`;
                 const canDelete = currentUser.is_admin || item.user_name === currentUser.name;
                 const deleteBtn = canDelete ? `<button class="btn-danger" style="padding: 8px;" onclick="deleteHistoryPoint(${item.id})"><img src="./static/009.png" class="delete-icon"></button>` : '';
-                const userColor = userColors[item.user_name] || '#ccc'; // Teamfarbe für den seitlichen Balken
+                const userColor = userColors[item.user_name] || '#ccc'; 
 
                 return `
                 <div class="history-item" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 15px; background: white; border-radius: 10px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-left: 5px solid ${userColor};">
@@ -327,7 +336,7 @@
         }
 
         // ==========================================
-        // NEU: RÜCKBLICK (Ohne Emoji, "Unentschieden")
+        // NEU: RÜCKBLICK (Icon groß auf der rechten Seite)
         // ==========================================
         function loadRueckblick() {
             const container = document.getElementById('rueckblick-container');
@@ -339,13 +348,39 @@
                 const start = new Date(baseDate.getTime() + (cNum * 14) * 86400000);
                 const end = new Date(start.getTime() + 13 * 86400000);
                 const p = allPointsCache.filter(x => { const d = new Date(x.timestamp); return d >= start && d <= new Date(end.getTime() + 86400000); });
-                let s = { 'LiSa': 0, 'SaNi': 0 }; p.forEach(x => s[x.team] += x.points);
-                const win = s[currentUser.team] > s[Object.keys(s).find(t => t !== currentUser.team)];
-                const lose = s[currentUser.team] < s[Object.keys(s).find(t => t !== currentUser.team)];
-                const status = win ? `<img src="./static/010.png" class="emoji-icon"> Gewonnen` : (lose ? `<img src="./static/011.png" class="emoji-icon"> Verloren` : 'Unentschieden'); // Remis ersetzt!
-                html += `<div style="background:${win ? '#e6f4ea' : (lose ? '#fce8e6' : '#f1f3f4')}; padding:15px; border-radius:10px; margin-bottom:10px; border-left:5px solid ${win ? '#34a853' : (lose ? '#ea4335' : '#999')}">
-                    <small>KW ${getISOWeekNumber(start)}/${getISOWeekNumber(end)}</small><br><strong style="display:flex; align-items:center; margin: 4px 0;">${status}</strong>
-                    <small style="color: #444;">Team ${currentUser.team}: ${s[currentUser.team]} Pkt | Gegenteam: ${s[Object.keys(s).find(t => t !== currentUser.team)]} Pkt</small></div>`;
+                
+                let s = { 'LiSa': 0, 'SaNi': 0 }; 
+                p.forEach(x => s[x.team] += x.points);
+                
+                let otherTeam = Object.keys(s).find(t => t !== currentUser.team) || (currentUser.team === 'LiSa' ? 'SaNi' : 'LiSa');
+                const myScore = s[currentUser.team] || 0;
+                const otherScore = s[otherTeam] || 0;
+
+                let resultBg = '#f1f3f4'; let resultBorder = '#999'; let resultText = 'Unentschieden'; let resultIcon = '';
+                
+                if (myScore > otherScore) {
+                    resultBg = '#e6f4ea'; resultBorder = '#34a853'; resultText = 'Gewonnen'; resultIcon = './static/010.png';
+                } else if (myScore < otherScore) {
+                    resultBg = '#fce8e6'; resultBorder = '#ea4335'; resultText = 'Verloren'; resultIcon = './static/011.png';
+                }
+
+                // Generiere das Bild-HTML oder lass es leer, wenn unentschieden
+                let iconHtml = resultIcon ? `<img src="${resultIcon}" style="width: 45px; height: 45px; object-fit: contain;">` : `<span style="font-size: 28px; color: #777;">=</span>`;
+
+                html += `
+                    <div style="background:${resultBg}; padding:15px; border-radius:10px; margin-bottom:12px; border-left:5px solid ${resultBorder}; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
+                        <div style="flex-grow: 1;">
+                            <div style="font-size: 12px; color: #666; margin-bottom: 4px;">KW ${getISOWeekNumber(start)}/${getISOWeekNumber(end)}</div>
+                            <div style="font-size: 18px; font-weight: bold; margin-bottom: 6px; color: ${resultBorder};">${resultText}</div>
+                            <div style="font-size: 13px; color: #444; line-height: 1.4;">
+                                <strong>Team ${currentUser.team}: ${myScore} Pkt</strong><br>
+                                Team ${otherTeam}: ${otherScore} Pkt
+                            </div>
+                        </div>
+                        <div style="padding-left: 15px; display: flex; justify-content: center; align-items: center;">
+                            ${iconHtml}
+                        </div>
+                    </div>`;
             }
             container.innerHTML = html || 'Noch keine Daten.';
         }
