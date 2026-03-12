@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WG App v15</title>
+    <title>WG App</title>
     <link rel="manifest" href="./manifest.json" />
     <link rel="icon" href="./static/icon.png" />
     <link rel="apple-touch-icon" href="./static/icon.png" />
@@ -84,7 +84,7 @@
 
     <div id="login-screen">
         <div class="login-box">
-            <h1 style="text-align: center;">🏔️ WG Login</h1>
+            <h1 style="text-align: center;">WG Login</h1>
             <input type="text" id="username" placeholder="Name">
             <input type="password" id="password" placeholder="Passwort">
             <button class="btn-primary" onclick="login()">Anmelden</button>
@@ -125,7 +125,7 @@
             <div id="tab-admin" style="display: none;">
                 <h3><img src="./static/013.png" class="emoji-icon"> Aufgaben verwalten</h3>
                 <div class="admin-card">
-                    <h4>➕ Neue Aufgabe</h4>
+                    <h4>Neue Aufgabe</h4>
                     <div style="display: flex; gap: 10px;">
                         <select id="new-cat" style="width: 60%;"><option value="Quick-Wins">Quick-Wins</option><option value="Core-Tasks">Core-Tasks</option><option value="Deep-Clean">Deep-Clean</option></select>
                         <input type="number" id="new-points" placeholder="Pkt" style="width: 40%;">
@@ -133,6 +133,9 @@
                     <input type="text" id="new-task" placeholder="Aufgabenname">
                     <button class="btn-primary" style="min-height: 40px;" onclick="addNewTask()">Hinzufügen</button>
                 </div>
+                
+                <h4 style="margin-top:25px; margin-bottom:10px;">Bestehende bearbeiten</h4>
+                
                 <div id="admin-tasks-container"></div>
             </div>
         </div>
@@ -314,7 +317,7 @@
                 const lose = s[currentUser.team] < s[Object.keys(s).find(t => t !== currentUser.team)];
                 const status = win ? `<img src="./static/010.png" class="emoji-icon"> Gewonnen` : (lose ? `<img src="./static/011.png" class="emoji-icon"> Verloren` : '🤝 Remis');
                 html += `<div style="background:${win ? '#e6f4ea' : (lose ? '#fce8e6' : '#f1f3f4')}; padding:15px; border-radius:10px; margin-bottom:10px; border-left:5px solid ${win ? '#34a853' : (lose ? '#ea4335' : '#999')}">
-                    <small>KW ${getISOWeekNumber(start)}/${getISOWeekNumber(end)}</small><br><strong>${status}</strong><br>
+                    <small>KW ${getISOWeekNumber(start)}/${getISOWeekNumber(end)}</small><br><strong style="display:flex; align-items:center;">${status}</strong><br>
                     <small>Team ${currentUser.team}: ${s[currentUser.team]} Pkt | Gegenteam: ${s[Object.keys(s).find(t => t !== currentUser.team)]} Pkt</small></div>`;
             }
             container.innerHTML = html || 'Noch keine Daten.';
