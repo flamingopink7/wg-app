@@ -431,6 +431,17 @@
             loadAdminTasks(); loadTasksAccordion();
         }
         async function deleteTask(id) { if(confirm("Löschen?")) { await supabaseClient.from('wg_tasks').delete().eq('id', id); loadAdminTasks(); loadTasksAccordion(); } }
+<script>
+        // Registriert den Service Worker für die PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').then(reg => {
+                    console.log('Service Worker registriert!', reg);
+                }).catch(err => {
+                    console.log('Service Worker Fehler:', err);
+                });
+            });
+        }
     </script>
 </body>
 </html>
