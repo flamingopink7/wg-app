@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>WG App v23</title>
+    <title>WG App v25</title>
     <link rel="manifest" href="./manifest.json" />
     <link rel="icon" href="./static/icon.png" />
     <link rel="apple-touch-icon" href="./static/icon.png" />
@@ -44,7 +44,7 @@
         .accordion { background-color: white; border-radius: 10px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden; }
         .accordion-header { background-color: white; padding: 18px 20px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; touch-action: manipulation; }
         .accordion-content { display: none; padding: 10px 20px 20px 20px; background-color: #fcfcfc; border-top: 1px solid #eee; }
-        .task-btn { width: 100%; min-height: 55px; border-radius: 8px; background: white; border: 1px solid #ddd; margin-bottom: 8px; text-align: left; padding: 0 15px; display: flex; justify-content: space-between; align-items: center; touch-action: manipulation; }
+        .task-btn { width: 100%; min-height: 55px; border-radius: 8px; background: white; border: 1px solid #ddd; margin-bottom: 8px; text-align: left; padding: 0 15px; display: flex; justify-content: space-between; align-items: center; touch-action: manipulation; transition: 0.3s; }
         
         .team-totals-container { display: flex; justify-content: space-between; gap: 10px; margin-top: 10px; flex-wrap: nowrap; }
         .team-total-box { flex: 1; background: white; padding: 15px 10px; border-radius: 12px; text-align: center; border-bottom: 4px solid #FF4B4B; min-width: 0; }
@@ -62,11 +62,17 @@
 
     <div id="edit-modal" class="modal-overlay">
         <div class="modal-content">
-            <h3 id="modal-title">Bearbeiten</h3>
+            <h3 id="modal-title">Aufgabe bearbeiten</h3>
             <input type="hidden" id="modal-task-id">
-            <input type="hidden" id="modal-edit-type"> 
-            <input type="text" id="modal-input-name" placeholder="Neuer Name" style="display:none;">
-            <input type="number" id="modal-input-points" placeholder="Neue Punkte" style="display:none;">
+            <input type="text" id="modal-input-name" placeholder="Name" style="margin-bottom: 10px;">
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <input type="number" id="modal-input-points" placeholder="Punkte" style="width: 33%; margin-bottom: 0;">
+                <input type="number" id="modal-input-cd" placeholder="Cooldown Min." style="width: 33%; margin-bottom: 0;">
+                <select id="modal-input-cd-type" style="width: 34%; margin-bottom: 0;">
+                    <option value="global">Alle</option>
+                    <option value="user">Nur ich</option>
+                </select>
+            </div>
             <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
                 <button class="btn-cancel" onclick="closeModal()" style="border:none; background:#f0f2f6; padding:10px 15px; border-radius:8px; font-weight:bold; cursor:pointer;">Abbrechen</button>
                 <button class="btn-primary" style="width:auto; min-height:40px; padding:0 20px;" onclick="saveModal()">Speichern</button>
@@ -88,9 +94,7 @@
     <div id="app-screen">
         <div class="top-header">
             <h2 id="welcome-text" style="margin:0;">Hallo!</h2>
-            <button class="logout-btn" onclick="logout()">
-                <img src="./static/004.png">
-            </button>
+            <button class="logout-btn" onclick="logout()"><img src="./static/004.png"></button>
         </div>
 
         <div class="content" id="main-content">
@@ -119,11 +123,16 @@
                 <h3><img src="./static/013.png" class="emoji-icon"> Aufgaben verwalten</h3>
                 <div class="admin-card">
                     <h4>Neue Aufgabe</h4>
-                    <div style="display: flex; gap: 10px;">
-                        <select id="new-cat" style="width: 60%;"><option value="Quick-Wins">Quick-Wins</option><option value="Core-Tasks">Core-Tasks</option><option value="Deep-Clean">Deep-Clean</option></select>
-                        <input type="number" id="new-points" placeholder="Pkt" style="width: 40%;">
+                    <select id="new-cat" style="margin-bottom: 10px;"><option value="Quick-Wins">Quick-Wins</option><option value="Core-Tasks">Core-Tasks</option><option value="Deep-Clean">Deep-Clean</option></select>
+                    <input type="text" id="new-task" placeholder="Aufgabenname" style="margin-bottom: 10px;">
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <input type="number" id="new-points" placeholder="Punkte" style="width: 33%; margin-bottom: 0;">
+                        <input type="number" id="new-cd" placeholder="Cooldown Min." value="0" style="width: 33%; margin-bottom: 0;">
+                        <select id="new-cd-type" style="width: 34%; margin-bottom: 0;">
+                            <option value="global">Alle</option>
+                            <option value="user">Nur ich</option>
+                        </select>
                     </div>
-                    <input type="text" id="new-task" placeholder="Aufgabenname">
                     <button class="btn-primary" style="min-height: 40px;" onclick="addNewTask()">Hinzufügen</button>
                 </div>
                 
@@ -146,7 +155,7 @@
     <script>
         document.addEventListener('touchmove', function (event) { if (event.scale !== undefined && event.scale !== 1) { event.preventDefault(); } }, { passive: false });
         let lastTouchEnd = 0;
-        document.addEventListener('touchend', function (event) { const now = (new Date()).getTime(); if (now - lastTouchEnd <= 300) { if(!event.target.closest('button') && !event.target.closest('input') && !event.target.closest('.accordion-header')) { event.preventDefault(); } } lastTouchEnd = now; }, { passive: false });
+        document.addEventListener('touchend', function (event) { const now = (new Date()).getTime(); if (now - lastTouchEnd <= 300) { if(!event.target.closest('button') && !event.target.closest('input') && !event.target.closest('select') && !event.target.closest('.accordion-header')) { event.preventDefault(); } } lastTouchEnd = now; }, { passive: false });
 
         const SUPABASE_URL = 'https://ckghuvwtafygmlxaylyi.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_AvT0AGUjHlmgWlrIZDD3Ng_JliBmjY-';
@@ -154,6 +163,7 @@
 
         let currentUser = null;
         let allPointsCache = []; 
+        let allTasksCache = []; 
         const userColors = { 'Livio': '#4A90E2', 'Salwa': '#E94A47', 'Saphira': '#F5A623', 'Nils': '#50E3C2' };
 
         window.onload = () => {
@@ -184,30 +194,35 @@
             document.getElementById('welcome-text').innerText = `Hallo ${currentUser.name}`;
             if (currentUser.is_admin) document.getElementById('nav-admin').style.display = 'flex';
             
-            // Lade beim Start alles
-            await fetchPoints();
-            loadTasksAccordion();
-            if(currentUser.is_admin) loadAdminTasks();
+            await fetchPointsAndTasks(); 
             
-            // NEU: Supabase Realtime Listener (Horchposten)
             supabaseClient.channel('punkte-live-updates')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'wg_points' }, async (payload) => {
-                    console.log('Live-Update empfangen!', payload);
-                    await fetchPoints(); // Graphen updaten, sobald sich in der DB was tut!
+                    await fetchPointsAndTasks(); 
                 }).subscribe();
+            
+            // Smarter Timer, der nicht stottert
+            setInterval(() => {
+                if(document.getElementById('tab-punkte').style.display === 'block') {
+                    loadTasksAccordion();
+                }
+            }, 60000);
             
             switchTab('stand');
         }
 
-        // Neue Hilfsfunktion, damit wir die Punkte jederzeit neu laden können
-        async function fetchPoints() {
-            const { data } = await supabaseClient.from('wg_points').select('*');
-            if(data) {
-                allPointsCache = data;
-                loadStandings(); 
-                loadHistory(); 
-                loadRueckblick();
-            }
+        async function fetchPointsAndTasks() {
+            const { data: points } = await supabaseClient.from('wg_points').select('*');
+            if(points) allPointsCache = points;
+            
+            const { data: tasks } = await supabaseClient.from('wg_tasks').select('*');
+            if(tasks) allTasksCache = tasks;
+
+            loadStandings(); 
+            loadHistory(); 
+            loadRueckblick();
+            loadTasksAccordion();
+            if(currentUser.is_admin) loadAdminTasks();
         }
 
         function logout() { localStorage.removeItem('wg_user'); location.reload(); }
@@ -221,6 +236,7 @@
             });
             if(tabName === 'stand') { contentArea.style.overflowY = 'hidden'; setTimeout(() => window.dispatchEvent(new Event('resize')), 100); } 
             else { contentArea.style.overflowY = 'auto'; }
+            if(tabName === 'punkte') loadTasksAccordion(); 
         }
 
         function getISOWeekNumber(d) {
@@ -228,18 +244,70 @@
             const week1 = new Date(date.getFullYear(), 0, 4); return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
         }
 
-        async function loadTasksAccordion() {
+        function loadTasksAccordion() {
             const container = document.getElementById('accordion-container');
-            const { data: tasks } = await supabaseClient.from('wg_tasks').select('*');
+            
+            // 1. Offene Akkordeons merken (für ruckelfreien Auto-Refresh)
+            let openTabs = [];
+            for(let i=0; i<3; i++) {
+                let el = document.getElementById('cat-'+i);
+                if(el && el.style.display === 'block') openTabs.push(i);
+            }
+
             const categories = ['Quick-Wins', 'Core-Tasks', 'Deep-Clean'];
-            container.innerHTML = '';
+            let html = '';
+            const now = new Date();
+
             categories.forEach((cat, index) => {
-                const catTasks = tasks.filter(t => t.category === cat).sort((a, b) => a.points - b.points);
-                let html = `<div class="accordion"><div class="accordion-header" onclick="toggleAccordion('cat-${index}')"><span style="display:flex; align-items:center;"><img src="./static/008.png" class="emoji-icon"> ${cat}</span> <span>▼</span></div><div class="accordion-content" id="cat-${index}">`;
+                const catTasks = allTasksCache.filter(t => t.category === cat).sort((a, b) => a.points - b.points);
+                html += `<div class="accordion"><div class="accordion-header" onclick="toggleAccordion('cat-${index}')"><span style="display:flex; align-items:center;"><img src="./static/008.png" class="emoji-icon"> ${cat}</span> <span>▼</span></div><div class="accordion-content" id="cat-${index}">`;
+                
                 catTasks.forEach(task => {
-                    html += `<button class="task-btn" onclick="savePoints('${task.task.replace(/'/g, "\\'")}', ${task.points})"><span>${task.task}</span><span style="color:#FF4B4B; font-weight:bold;">${task.points}P</span></button>`;
+                    let isLocked = false;
+                    let timeRemainingStr = "";
+                    let btnStyle = "";
+                    let clickAction = `onclick="savePoints('${task.task.replace(/'/g, "\\'")}', ${task.points})"`;
+
+                    // Cooldown Berechnung
+                    if (task.cooldown_minutes && task.cooldown_minutes > 0) {
+                        let relevantPoints = allPointsCache.filter(p => p.task === task.task);
+                        if (task.cooldown_type === 'user') {
+                            relevantPoints = relevantPoints.filter(p => p.user_name === currentUser.name);
+                        }
+                        
+                        relevantPoints.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                        
+                        if (relevantPoints.length > 0) {
+                            const lastDoneTime = new Date(relevantPoints[0].timestamp);
+                            const diffMinutes = Math.floor((now - lastDoneTime) / 60000);
+                            
+                            if (diffMinutes < task.cooldown_minutes) {
+                                isLocked = true;
+                                const minsLeft = task.cooldown_minutes - diffMinutes;
+                                if (minsLeft > 1440) timeRemainingStr = `in ${Math.ceil(minsLeft/1440)}T`;
+                                else if (minsLeft >= 60) timeRemainingStr = `in ${Math.ceil(minsLeft/60)}h`;
+                                else timeRemainingStr = `in ${minsLeft}m`;
+                                
+                                btnStyle = "opacity: 0.5; cursor: not-allowed; background-color: #f8f9fa;";
+                                clickAction = ""; // Button deaktivieren
+                            }
+                        }
+                    }
+
+                    // Emoji entfernt, sauberer Text
+                    let rightSide = isLocked ? `<span style="color:#777; font-weight:bold; font-size:13px;">${timeRemainingStr}</span>` : `<span style="color:#FF4B4B; font-weight:bold;">${task.points}P</span>`;
+
+                    html += `<button class="task-btn" style="${btnStyle}" ${clickAction}><span>${task.task}</span>${rightSide}</button>`;
                 });
-                container.innerHTML += html + `</div></div>`;
+                html += `</div></div>`;
+            });
+            
+            container.innerHTML = html;
+
+            // 2. Offene Akkordeons unsichtbar wiederherstellen
+            openTabs.forEach(i => {
+                let el = document.getElementById('cat-'+i);
+                if(el) el.style.display = 'block';
             });
         }
 
@@ -249,7 +317,7 @@
             await supabaseClient.from('wg_points').insert([{ user_name: currentUser.name, team: currentUser.team, task: taskName, points: points }]);
             const toast = document.getElementById('toast');
             toast.style.opacity = '1'; setTimeout(() => toast.style.opacity = '0', 3000);
-            await fetchPoints(); // Sofort lokal aktualisieren
+            await fetchPointsAndTasks(); 
         }
 
         function loadHistory() {
@@ -269,7 +337,7 @@
             }).join('');
         }
 
-        async function deleteHistoryPoint(id) { if(!confirm("Löschen?")) return; await supabaseClient.from('wg_points').delete().eq('id', id); await fetchPoints(); }
+        async function deleteHistoryPoint(id) { if(!confirm("Löschen?")) return; await supabaseClient.from('wg_points').delete().eq('id', id); await fetchPointsAndTasks(); }
 
         function loadStandings() {
             const baseDate = new Date('2024-01-01T00:00:00Z');
@@ -319,43 +387,80 @@
             container.innerHTML = html || 'Noch keine Daten.';
         }
 
-        function openEditNameModal(id, name) { document.getElementById('modal-title').innerText = "Name ändern"; document.getElementById('modal-edit-type').value = "name"; document.getElementById('modal-task-id').value = id; document.getElementById('modal-input-name').value = name; document.getElementById('modal-input-name').style.display = "block"; document.getElementById('modal-input-points').style.display = "none"; document.getElementById('edit-modal').style.display = "flex"; }
-        function openEditPointsModal(id, points) { document.getElementById('modal-title').innerText = "Punkte ändern"; document.getElementById('modal-edit-type').value = "points"; document.getElementById('modal-task-id').value = id; document.getElementById('modal-input-points').value = points; document.getElementById('modal-input-points').style.display = "block"; document.getElementById('modal-input-name').style.display = "none"; document.getElementById('edit-modal').style.display = "flex"; }
+        function openEditModal(id, name, points, cd, cdType) { 
+            document.getElementById('modal-task-id').value = id; 
+            document.getElementById('modal-input-name').value = name; 
+            document.getElementById('modal-input-points').value = points; 
+            document.getElementById('modal-input-cd').value = cd || 0;
+            document.getElementById('modal-input-cd-type').value = cdType || 'global';
+            document.getElementById('edit-modal').style.display = "flex"; 
+        }
+        
         function closeModal() { document.getElementById('edit-modal').style.display = "none"; }
         
         async function saveModal() {
             const id = document.getElementById('modal-task-id').value;
-            if(document.getElementById('modal-edit-type').value === "name") await supabaseClient.from('wg_tasks').update({ task: document.getElementById('modal-input-name').value }).eq('id', id);
-            else await supabaseClient.from('wg_tasks').update({ points: parseInt(document.getElementById('modal-input-points').value) }).eq('id', id);
-            closeModal(); loadAdminTasks(); loadTasksAccordion();
+            const updateData = {
+                task: document.getElementById('modal-input-name').value,
+                points: parseInt(document.getElementById('modal-input-points').value),
+                cooldown_minutes: parseInt(document.getElementById('modal-input-cd').value) || 0,
+                cooldown_type: document.getElementById('modal-input-cd-type').value
+            };
+            await supabaseClient.from('wg_tasks').update(updateData).eq('id', id);
+            closeModal(); await fetchPointsAndTasks();
         }
 
-        async function loadAdminTasks() {
+        function loadAdminTasks() {
             const container = document.getElementById('admin-tasks-container');
-            const { data: tasks } = await supabaseClient.from('wg_tasks').select('*');
+            
+            // Auch hier merken wir uns offene Tabs für einen sauberen Refresh
+            let openTabs = [];
+            for(let i=0; i<3; i++) {
+                let el = document.getElementById('admin-cat-'+i);
+                if(el && el.style.display === 'block') openTabs.push(i);
+            }
+
             const categories = ['Quick-Wins', 'Core-Tasks', 'Deep-Clean'];
-            container.innerHTML = '';
+            let html = '';
+            
             categories.forEach((cat, index) => {
-                const catTasks = tasks.filter(t => t.category === cat).sort((a, b) => a.points - b.points);
-                let html = `<div class="accordion"><div class="accordion-header" onclick="toggleAccordion('admin-cat-${index}')"><span style="display:flex; align-items:center;"><img src="./static/008.png" class="emoji-icon"> ${cat}</span> <span>▼</span></div><div class="accordion-content" id="admin-cat-${index}">`;
+                const catTasks = allTasksCache.filter(t => t.category === cat).sort((a, b) => a.points - b.points);
+                html += `<div class="accordion"><div class="accordion-header" onclick="toggleAccordion('admin-cat-${index}')"><span style="display:flex; align-items:center;"><img src="./static/008.png" class="emoji-icon"> ${cat}</span> <span>▼</span></div><div class="accordion-content" id="admin-cat-${index}">`;
+                
                 catTasks.forEach(task => {
+                    // Die UI sieht hier exakt aus wie früher. Cooldown ist komplett versteckt.
                     html += `<div class="admin-task-item" style="display:flex; justify-content:space-between; align-items:center; background:white; padding:10px; border-radius:8px; margin-bottom:5px; border:1px solid #ddd;">
                         <div><strong>${task.task}</strong><br><small>${task.points} Pkt</small></div>
                         <div style="display:flex; gap:5px;">
-                            <button class="btn-edit" onclick="openEditNameModal(${task.id}, '${task.task.replace(/'/g, "\\'")}')"><img src="./static/014.png" class="action-icon"></button>
-                            <button class="btn-edit" onclick="openEditPointsModal(${task.id}, ${task.points})"><img src="./static/015.png" class="action-icon"></button>
+                            <button class="btn-edit" onclick="openEditModal(${task.id}, '${task.task.replace(/'/g, "\\'")}', ${task.points}, ${task.cooldown_minutes}, '${task.cooldown_type}')"><img src="./static/014.png" class="action-icon"></button>
                             <button class="btn-danger" onclick="deleteTask(${task.id})"><img src="./static/009.png" class="delete-icon"></button>
                         </div></div>`;
                 });
-                container.innerHTML += html + `</div></div>`;
+                html += `</div></div>`;
+            });
+            
+            container.innerHTML = html;
+            
+            // Offene Tabs wiederherstellen
+            openTabs.forEach(i => {
+                let el = document.getElementById('admin-cat-'+i);
+                if(el) el.style.display = 'block';
             });
         }
         
         async function addNewTask() {
-            await supabaseClient.from('wg_tasks').insert([{ category: document.getElementById('new-cat').value, task: document.getElementById('new-task').value, points: parseInt(document.getElementById('new-points').value) }]);
-            loadAdminTasks(); loadTasksAccordion();
+            await supabaseClient.from('wg_tasks').insert([{ 
+                category: document.getElementById('new-cat').value, 
+                task: document.getElementById('new-task').value, 
+                points: parseInt(document.getElementById('new-points').value),
+                cooldown_minutes: parseInt(document.getElementById('new-cd').value) || 0,
+                cooldown_type: document.getElementById('new-cd-type').value
+            }]);
+            document.getElementById('new-task').value = ""; document.getElementById('new-points').value = "";
+            await fetchPointsAndTasks();
         }
-        async function deleteTask(id) { if(confirm("Löschen?")) { await supabaseClient.from('wg_tasks').delete().eq('id', id); loadAdminTasks(); loadTasksAccordion(); } }
+
+        async function deleteTask(id) { if(confirm("Löschen?")) { await supabaseClient.from('wg_tasks').delete().eq('id', id); await fetchPointsAndTasks(); } }
 
         if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js'); }); }
     </script>
