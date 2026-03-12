@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>WG App v28</title>
+    <title>WG App v29</title>
     <link rel="manifest" href="./manifest.json" />
     <link rel="icon" href="./static/icon.png" />
     <link rel="apple-touch-icon" href="./static/icon.png" />
@@ -82,6 +82,17 @@
             <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
                 <button class="btn-cancel" onclick="closeModal()" style="border:none; background:#f0f2f6; padding:10px 15px; border-radius:8px; font-weight:bold; cursor:pointer;">Abbrechen</button>
                 <button class="btn-primary" style="width:auto; min-height:40px; padding:0 20px;" onclick="saveModal()">Speichern</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="modal-overlay">
+        <div class="modal-content" style="text-align: center;">
+            <h3 style="margin-top: 0;">Wirklich löschen?</h3>
+            <p style="color: #666; margin-bottom: 20px; font-size: 15px;">Möchtest du diesen Eintrag unwiderruflich löschen?</p>
+            <div style="display: flex; justify-content: center; gap: 10px;">
+                <button class="btn-cancel" onclick="closeConfirmModal()" style="border:none; background:#f0f2f6; padding:10px 20px; border-radius:8px; font-weight:bold; cursor:pointer;">Abbrechen</button>
+                <button class="btn-primary" style="width:auto; min-height:40px; padding:0 25px; background-color:#dc3545;" onclick="executeDelete()">Löschen</button>
             </div>
         </div>
     </div>
@@ -171,6 +182,10 @@
         let allPointsCache = []; 
         let allTasksCache = []; 
         const userColors = { 'Livio': '#4A90E2', 'Salwa': '#E94A47', 'Saphira': '#F5A623', 'Nils': '#50E3C2' };
+        
+        // Globale Variablen für den Lösch-Vorgang
+        let deleteTargetId = null;
+        let deleteTargetType = null;
 
         window.onload = () => {
             const savedUser = localStorage.getItem('wg_user');
@@ -272,7 +287,6 @@
                     
                     let clickAction = `onclick="savePoints('${encodeURIComponent(task.task)}', ${task.points})"`;
 
-                    // --- NEU: Wer hat es wann zuletzt gemacht? ---
                     let lastDoneStr = "<span style='font-size: 11px; color: #aaa; font-weight: normal; margin-top: 4px;'>Noch nie erledigt</span>";
                     let allPointsForThisTask = allPointsCache.filter(p => p.task === task.task);
                     allPointsForThisTask.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -283,10 +297,8 @@
                         const timeStr = `${lastDate.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'})} - ${lastDate.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'})}`;
                         lastDoneStr = `<span style='font-size: 11px; color: #888; font-weight: normal; margin-top: 4px;'>Zuletzt: ${lastEntry.user_name} (${timeStr})</span>`;
                     }
-                    // ---------------------------------------------
 
                     if (task.cooldown_minutes && task.cooldown_minutes > 0) {
-                        // Für den Cooldown müssen wir schauen, ob es ALLE oder NUR DEN USER betrifft
                         let relevantPoints = allPointsForThisTask;
                         if (task.cooldown_type === 'user') {
                             relevantPoints = relevantPoints.filter(p => p.user_name === currentUser.name);
@@ -309,7 +321,6 @@
                         }
                     }
 
-                    // Wir bauen den Button jetzt mit einer flexiblen linken und rechten Seite auf
                     let rightSide = isLocked ? `<span style="color:#777; font-weight:bold; font-size:13px;">${timeRemainingStr}</span>` : `<span style="color:#FF4B4B; font-weight:bold;">${task.points}P</span>`;
                     let leftSide = `<div style="display:flex; flex-direction:column; align-items:flex-start;"><span>${task.task}</span>${lastDoneStr}</div>`;
 
@@ -344,7 +355,8 @@
                 const dateObj = new Date(item.timestamp);
                 const timeStr = `${dateObj.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'})} - ${dateObj.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'})}`;
                 const canDelete = currentUser.is_admin || item.user_name === currentUser.name;
-                const deleteBtn = canDelete ? `<button class="btn-danger" style="padding: 8px;" onclick="deleteHistoryPoint(${item.id})"><img src="./static/009.png" class="delete-icon"></button>` : '';
+                // Aufruf der neuen Custom-Lösch-Funktion
+                const deleteBtn = canDelete ? `<button class="btn-danger" style="padding: 8px;" onclick="confirmDelete(${item.id}, 'history')"><img src="./static/009.png" class="delete-icon"></button>` : '';
                 return `
                 <div class="history-item" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 15px; background: white; border-radius: 10px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-left: 5px solid ${userColors[item.user_name] || '#ccc'};">
                     <div style="flex-grow: 1; padding-right: 15px;"><div style="font-size: 11px; color: #888; margin-bottom: 4px;">${timeStr} Uhr</div><div style="font-size: 14px; line-height: 1.4;"><strong>${item.user_name}</strong><br><span style="color: #444;">${item.task}</span></div></div>
@@ -353,7 +365,35 @@
             }).join('');
         }
 
-        async function deleteHistoryPoint(id) { if(!confirm("Löschen?")) return; await supabaseClient.from('wg_points').delete().eq('id', id); await fetchPointsAndTasks(); }
+        // --- NEU: Custom Lösch-Modal Logik ---
+        function confirmDelete(id, type) {
+            deleteTargetId = id;
+            deleteTargetType = type;
+            document.getElementById('confirm-modal').style.display = "flex";
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirm-modal').style.display = "none";
+            deleteTargetId = null;
+            deleteTargetType = null;
+        }
+
+        async function executeDelete() {
+            if (!deleteTargetId || !deleteTargetType) return;
+            
+            const id = deleteTargetId;
+            const type = deleteTargetType;
+            closeConfirmModal();
+
+            if (type === 'history') {
+                await supabaseClient.from('wg_points').delete().eq('id', id);
+            } else if (type === 'task') {
+                await supabaseClient.from('wg_tasks').delete().eq('id', id);
+            }
+            
+            await fetchPointsAndTasks();
+        }
+        // -------------------------------------
 
         function loadStandings() {
             const baseDate = new Date('2024-01-01T00:00:00Z');
@@ -467,12 +507,13 @@
                     const safeCd = task.cooldown_minutes || 0;
                     const safeCdType = task.cooldown_type || 'global';
                     
+                    // Aufruf der neuen Custom-Lösch-Funktion für Admin-Aufgaben
                     html += `<div class="admin-task-item" style="display:flex; justify-content:space-between; align-items:center; background:white; padding:10px; border-radius:8px; margin-bottom:5px; border:1px solid #ddd;">
                         <div><strong>${task.task}</strong><br><small>${task.points} Pkt</small></div>
                         <div style="display:flex; gap:5px;">
                             <button class="btn-edit" onclick="openEditNameModal(${task.id}, '${encodeURIComponent(task.task)}', ${safeCd}, '${safeCdType}')"><img src="./static/014.png" class="action-icon"></button>
                             <button class="btn-edit" onclick="openEditPointsModal(${task.id}, ${task.points})"><img src="./static/015.png" class="action-icon"></button>
-                            <button class="btn-danger" onclick="deleteTask(${task.id})"><img src="./static/009.png" class="delete-icon"></button>
+                            <button class="btn-danger" onclick="confirmDelete(${task.id}, 'task')"><img src="./static/009.png" class="delete-icon"></button>
                         </div></div>`;
                 });
                 html += `</div></div>`;
@@ -497,8 +538,6 @@
             document.getElementById('new-task').value = ""; document.getElementById('new-points').value = ""; document.getElementById('new-cd').value = "";
             await fetchPointsAndTasks();
         }
-
-        async function deleteTask(id) { if(confirm("Löschen?")) { await supabaseClient.from('wg_tasks').delete().eq('id', id); await fetchPointsAndTasks(); } }
 
         if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js'); }); }
     </script>
